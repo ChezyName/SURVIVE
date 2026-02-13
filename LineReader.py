@@ -4,7 +4,7 @@ import os
 
 def CountLines(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
-        return sum(1 for _ in file)
+        return sum(1 for line in file if line.strip() and not line.strip().startswith('//')) # ignores comments
     
 def CountAllLines():
     directory_path = Path("src")
