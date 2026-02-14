@@ -4,16 +4,35 @@ use std::f32::consts::PI;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
+use crate::projectile;
+use crate::config;
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    pub fire_timer: Timer,
+    pub fire_rate: f32,
+    pub damage: f32,
+    pub bullet_speed: f32,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        let fireRate = config::FIRE_RATE;
+        Self {
+            fire_timer: Timer::from_seconds(60.0/fireRate, TimerMode::Once),
+            fire_rate: fireRate,
+            damage: config::BULLET_DAMAGE,
+            bullet_speed: config::BULLET_SPEED,
+        }
+    }
+}
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player)
-           .add_systems(Update, player_aim_system);
+           .add_systems(Update, (player_aim_system, player_shooting));
     }
 }
 
@@ -91,7 +110,7 @@ fn spawn_player(
         Mesh2d(meshes.add(mesh)),
         MeshMaterial2d(materials.add(Color::WHITE)),
         Transform::from_xyz(0.0, 0.0, 0.0),
-        Player,
+        Player::default(),
     ));
 }
 
@@ -110,4 +129,30 @@ fn player_aim_system(
             }
         }
     }
+}
+
+fn player_shooting(
+    mut commands: Commands,
+    time: Res<Time>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut player_query: Query<(&Transform, &mut Player)>,
+) {
+    if let Ok((transform, mut player)) = player_query.single_mut() {
+        player.fire_timer.tick(time.delta());
+
+        if mouse_input.pressed(MouseButton::Left) && player.fire_timer.is_finished() {
+            player.fire_timer.reset();
+
+            projectile::spawn_projectile(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                *transform,
+                player.damage,
+                player.bullet_speed,
+            );
+        }
+    } else {println!("Error finding Player")}
 }
