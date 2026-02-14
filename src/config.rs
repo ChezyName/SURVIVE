@@ -7,5 +7,5 @@ pub const BULLET_HIT_BOX: f32 = 10.0; //For Hitting Enemies
 //Basic Enemy Stuff, Multiplies Later
 pub const ENEMY_SPAWN_DIST: f32 = 800.0;
 pub const ENEMY_HEALTH: f32 = 10.0;
-pub const ENEMY_SPEED: f32 = 60.0;
+pub const ENEMY_SPEED: f32 = 160.0;
 pub const ENEMY_HIT_BOX: f32 = 20.0; //For Hitting Player - Slightly Bigger to not get damaged by projectile

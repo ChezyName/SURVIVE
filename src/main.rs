@@ -21,9 +21,7 @@ fn spawn_test_enemy(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials,  0.0, 3);
-    enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, 30.0, 4);
-    enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, -30.0, 5);
-
-    enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, -90.0, 2);
+    for i in 1..=(36/2) {
+        enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, i as f32 * 20.0, i / 2);
+    }
 }
