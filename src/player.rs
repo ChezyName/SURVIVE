@@ -17,10 +17,9 @@ pub struct Player {
 
 impl Default for Player {
     fn default() -> Self {
-        let fireRate = config::FIRE_RATE;
         Self {
-            fire_timer: Timer::from_seconds(60.0/fireRate, TimerMode::Once),
-            fire_rate: fireRate,
+            fire_timer: Timer::from_seconds(60.0/config::FIRE_RATE, TimerMode::Once),
+            fire_rate: config::FIRE_RATE,
             damage: config::BULLET_DAMAGE,
             bullet_speed: config::BULLET_SPEED,
         }

@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
-use crate::config;
+use crate::{config, enemy};
+use crate::enemy::Enemy;
+use crate::enemy::take_damage;
 
 #[derive(Component)]
 pub struct Projectile {
@@ -17,7 +19,7 @@ pub struct ProjectilePlugin;
 
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (move_projectiles, projectile_lifetime));
+        app.add_systems(Update, (move_projectiles, projectile_lifetime, projectile_collision));
     }
 }
 
@@ -68,6 +70,25 @@ fn projectile_lifetime(time: Res<Time>, mut commands: Commands, mut query: Query
         lifetime.0.tick(time.delta());
         if lifetime.0.is_finished() {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn projectile_collision(
+    mut commands: Commands,
+    projectile_query: Query<(Entity, &Transform, &Projectile)>,
+    mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
+) {
+    for (projectile_entity, projectile_transform, projectile) in &projectile_query {
+        for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
+            let distance = projectile_transform.translation.distance(enemy_transform.translation);
+            if distance < config::BULLET_HIT_BOX {
+                println!("Enemy hit by Projectile with {} Damage", projectile.damage);
+                commands.entity(projectile_entity).despawn();
+
+                take_damage(&mut commands, enemy_entity, &mut enemy_comp, projectile.damage);
+                break;
+            }
         }
     }
 }
