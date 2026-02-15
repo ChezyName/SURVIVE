@@ -13,6 +13,8 @@ pub struct Player {
     pub fire_rate: f32,
     pub damage: f32,
     pub bullet_speed: f32,
+    pub health: f32,
+    pub max_health: f32,
 }
 
 impl Default for Player {
@@ -22,6 +24,8 @@ impl Default for Player {
             fire_rate: config::FIRE_RATE,
             damage: config::BULLET_DAMAGE,
             bullet_speed: config::BULLET_SPEED,
+            health: config::PLAYER_MAX_HEALTH,
+            max_health: config::PLAYER_MAX_HEALTH,
         }
     }
 }
@@ -154,4 +158,17 @@ fn player_shooting(
             );
         }
     } else {println!("Error finding Player")}
+}
+
+pub fn take_damage(
+    commands: &mut Commands,
+    entity: Entity,
+    player: &mut Player, // self
+    damage: f32,
+) {
+    player.health -= damage;
+
+    if player.health <= 0.0 {
+        println!("Player has died");
+    }
 }

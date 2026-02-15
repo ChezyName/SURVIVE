@@ -4,12 +4,15 @@ use bevy::asset::RenderAssetUsages;
 use crate::player::Player;
 use bevy::mesh::Indices;
 use crate::config;
+use crate::player;
+use crate::GameState;
 
 #[derive(Component)]
 pub struct Enemy {
     pub health: f32,
     pub speed: f32,
     pub damage: f32,
+    pub price_tag: u32,
 }
 
 pub struct EnemyPlugin;
@@ -36,10 +39,10 @@ fn enemy_ai_system(
 
 fn enemy_collision_system(
     mut commands: Commands,
-    player_query: Query<&Transform, With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &mut Player)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
 ) {
-    if let Ok(player_transform) = player_query.single() {
+    for (player_entity, player_transform, mut player_comp) in &mut player_query {
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
             let distance = player_transform.translation.distance(enemy_transform.translation);
 
@@ -47,6 +50,7 @@ fn enemy_collision_system(
                 commands.entity(enemy_entity).despawn();
                 
                 println!("Player hit by Enemy with {} Damage", enemy_comp.damage);
+                player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage);
             }
         }
     }
@@ -104,6 +108,7 @@ pub fn spawn_enemy(
             health: config::ENEMY_HEALTH,
             speed: config::ENEMY_SPEED,
             damage: config::ENEMY_HEALTH,
+            price_tag: config::ENEMY_PRICE,
         },
     ));
 }
@@ -112,11 +117,12 @@ pub fn take_damage(
     commands: &mut Commands,
     entity: Entity,
     enemy: &mut Enemy, // The component data
-    damage: f32,
+    damage: f32
 ) {
     enemy.health -= damage;
 
     if enemy.health <= 0.0 {
         commands.entity(entity).despawn();
+        //game_state.money += enemy.price_tag;
     }
 }
