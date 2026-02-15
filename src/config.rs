@@ -1,8 +1,8 @@
 //Player Defaults
-pub const PLAYER_MAX_HEALTH: f32 = 500.0;
+pub const PLAYER_MAX_HEALTH: f32 = 100.0;
 
-//UI Configs
-pub const UI_HEALTH_DIV: f32 = 10.0; //HP per Section; 200HP = 20 Sections
+//UI Defaults
+pub const UI_HEALTH_DIV: f32 = 10.0; //How much health per segment
 
 //Bullet Defaults
 pub const BULLET_SPEED: f32 = 200.0;
@@ -14,6 +14,7 @@ pub const BULLET_HIT_BOX: f32 = 10.0; //For Hitting Enemies
 //Basic Enemy Stuff, Multiplies Later
 pub const ENEMY_SPAWN_DIST: f32 = 800.0;
 pub const ENEMY_HEALTH: f32 = 10.0;
+pub const ENEMY_DAMAGE: f32 = 5.0;
 pub const ENEMY_SPEED: f32 = 160.0;
 pub const ENEMY_HIT_BOX: f32 = 20.0; //For Hitting Player - Slightly Bigger to not get damaged by projectile
 pub const ENEMY_PRICE: u32 = 5;

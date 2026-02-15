@@ -107,7 +107,7 @@ pub fn spawn_enemy(
         Enemy {
             health: config::ENEMY_HEALTH,
             speed: config::ENEMY_SPEED,
-            damage: config::ENEMY_HEALTH,
+            damage: config::ENEMY_DAMAGE,
             price_tag: config::ENEMY_PRICE,
         },
     ));

@@ -3,10 +3,13 @@ use crate::player::Player;
 use crate::config;
 
 #[derive(Component)]
+pub struct HealthValueText;
+
+#[derive(Component)]
 pub struct HealthBarText;
 
 #[derive(Component)]
-pub struct HealthValueText;
+pub struct HealthSegment(pub usize);
 
 pub struct PlayerUIPlugin;
 
@@ -33,11 +36,12 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
             align_items: AlignItems::Center,
-            row_gap: Val::Px(2.0),
+            row_gap: Val::Px(5.0),
+            width: Val::Percent(100.0), 
             ..default()
         })
         .with_children(|inner| {
-            // HP Text On Top of UI
+            // HP Text
             inner.spawn((
                 Text::new("[100]"),
                 TextFont {
@@ -49,34 +53,37 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 HealthValueText,
             ));
 
-            //HP Bars
+            // HP Bar Container (The "Bounds")
             inner.spawn((
                 Node {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center, // Centers the pips
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(1.0), // Smaller gap looks better when squished
+                    width: Val::Px(500.0),    // Total width available for the bar
+                    height: Val::Px(18.0),
                     ..default()
                 },
+                // Slant to match Overwatch aesthetic
+                Transform::from_rotation(Quat::from_rotation_z(-0.12)), 
                 HealthBarText,
             ))
-            .with_children(|bar_root| {
-                bar_root.spawn((
-                    Text::new(""),
-                    TextFont {
-                        font: font.clone(),
-                        font_size: 30.0,
-                        ..default()
-                    },
-                    TextColor(Color::WHITE),
-                ));
-                bar_root.spawn((
-                    Text::new(""),
-                    TextFont {
-                        font: font.clone(),
-                        font_size: 30.0,
-                        ..default()
-                    },
-                    TextColor(Color::srgba(1.0, 1.0, 1.0, 0.2)),
-                ));
+            .with_children(|parent| {
+                // Spawn a large pool of pips. 
+                // We will hide/show them based on max_health.
+                for i in 0..200 { 
+                    parent.spawn((
+                        Node {
+                            // This makes them share the parent's width equally
+                            flex_grow: 1.0, 
+                            height: Val::Percent(100.0),
+                            ..default()
+                        },
+                        BackgroundColor(Color::WHITE),
+                        HealthSegment(i),
+                    ));
+                }
             });
         });
     });
@@ -84,39 +91,38 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn update_player_ui(
     player_query: Query<&Player>,
-    bar_parent_query: Query<&Children, With<HealthBarText>>,
-    // We use Without to ensure queries are disjoint and don't conflict
-    mut val_query: Query<&mut Text, (With<HealthValueText>, Without<HealthBarText>)>,
-    mut text_query: Query<&mut Text, (Without<HealthValueText>, Without<HealthBarText>)>,
+    mut segment_query: Query<(&HealthSegment, &mut Visibility, &mut BackgroundColor, &mut Node)>,
+    mut text_query: Query<&mut Text, With<HealthValueText>>,
 ) {
-    //If player is Invalid; Exit
     let Ok(player) = player_query.single() else { return; };
 
-    //Update HP Text
-    if let Ok(mut text) = val_query.single_mut() {
+    // Update Text
+    if let Ok(mut text) = text_query.single_mut() {
         text.0 = format!("{:.0} HP", player.health);
     }
 
-    //Update HP Bar
-    if let Ok(children) = bar_parent_query.single() {
-        let sections = (player.max_health / config::UI_HEALTH_DIV).floor() as usize;
-        let current_health_blocks = (player.health / config::UI_HEALTH_DIV).floor() as usize;
-        let current_health_blocks = current_health_blocks.min(sections);
-        let remaining = sections.saturating_sub(current_health_blocks);
+    // 1 pip per 10 HP (Change this to adjust granularity)
+    let total_capacity = (player.max_health / config::UI_HEALTH_DIV).ceil() as usize; 
+    let filled_count = (player.health / config::UI_HEALTH_DIV).ceil() as usize;
 
-        println!("{} -> {} - {}", sections, current_health_blocks, remaining);
+    for (segment, mut vis, mut color, mut node) in segment_query.iter_mut() {
+        if segment.0 < total_capacity {
+            *vis = Visibility::Visible;
+            
+            // Flex logic: only visible pips get flex_grow
+            node.flex_grow = 1.0; 
+            node.display = Display::Flex;
 
-        // Update filled portion (Child 0)
-        if let Some(&child) = children.get(0) {
-            if let Ok(mut text) = text_query.get_mut(child) {
-                text.0 = "█ ".repeat(current_health_blocks);
+            if segment.0 < filled_count {
+                color.0 = Color::WHITE; 
+            } else {
+                color.0 = Color::srgba(1.0, 1.0, 1.0, 0.1); // Empty "ghost" pips
             }
-        }
-        // Update empty portion (Child 1)
-        if let Some(&child) = children.get(1) {
-            if let Ok(mut text) = text_query.get_mut(child) {
-                text.0 = "█ ".repeat(remaining);
-            }
+        } else {
+            *vis = Visibility::Hidden;
+            // Crucial: remove from layout so they don't take up space
+            node.flex_grow = 0.0;
+            node.display = Display::None; 
         }
     }
 }
