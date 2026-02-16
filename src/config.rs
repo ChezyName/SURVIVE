@@ -48,7 +48,6 @@ impl EnemyType {
 
         match self {
             EnemyType::Normal => EnemyConfig {
-                reward: 10,
                 health:   lerp(10.0, 20.0, level),
                 damage:   lerp(2.0, 10.0, level),
                 size:     lerp(15.0, 30.0, level),
