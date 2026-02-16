@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use crate::player::Player;
 use crate::config;
 use crate::GameState;
+use crate::wave_manager;
 
 #[derive(Component)]
 pub struct HealthValueText;
@@ -14,6 +15,9 @@ pub struct HealthSegment(pub usize);
 
 #[derive(Component)]
 pub struct GameStateText;
+
+#[derive(Component)]
+pub struct EnemiesText;
 
 pub struct PlayerUIPlugin;
 
@@ -100,6 +104,17 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 TextColor(Color::WHITE),
                 GameStateText,
             ));
+
+            inner.spawn((
+                Text::new("- No Enemies Remaining -"),
+                TextFont {
+                    font_size: 10.0,
+                    font: font.clone(),
+                    ..default()
+                },
+                TextColor(Color::WHITE),
+                EnemiesText,
+            ));
         });
     });
 }
@@ -126,7 +141,9 @@ fn update_player_ui(
     mut segment_query: Query<(&HealthSegment, &mut Visibility, &mut BackgroundColor, &mut Node)>,
     mut text_query: Query<&mut Text, With<HealthValueText>>,
     mut gamestate_query: Query<&mut Text, (With<GameStateText>, Without<HealthValueText>)>,
+    mut enemies_query: Query<&mut Text, (With<EnemiesText>, Without<HealthValueText>, Without<GameStateText>)>,
     game_state: Res<GameState>,
+    wave_state: Res<wave_manager::WaveStatus>,
 ) {
     let Ok(player) = player_query.single() else { return; };
 
@@ -138,6 +155,15 @@ fn update_player_ui(
     // Update GS Text
     if let Ok(mut text) = gamestate_query.single_mut() {
         text.0 = format!("[Wave {} | ${}]", game_state.round, format_currency(game_state.money));
+    }
+
+    // Update Game Status Text
+    if let Ok(mut text) = enemies_query.single_mut() {
+        //If Fighting Mode / Enemies are Alive
+        let enemy_count = wave_state.enemies_remaining;
+        if enemy_count == 1 { text.0 = format!("1 Enemy Remaining"); }
+        else if enemy_count <= 0 { text.0 = format!("No Enemy Remaining"); }
+        else { text.0 = format!("{} Enemies Remaining", enemy_count); }
     }
 
     // 1 pip per 10 HP (Change this to adjust granularity)

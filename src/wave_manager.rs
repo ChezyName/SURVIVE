@@ -11,6 +11,7 @@ use crate::enemy;
 pub struct WaveStatus {
     pub is_running: bool,
     pub enemies_total: usize,
+    pub enemies_remaining: usize,
     pub enemies_spawned: usize,
     pub spawn_targets: HashMap<EnemyType, usize>,
     pub spawned_by_type: HashMap<EnemyType, usize>,
@@ -43,6 +44,7 @@ pub fn start_wave(
 
     wave_status.spawn_targets = targets;
     wave_status.enemies_total = total as usize;
+    wave_status.enemies_remaining = total as usize;
     wave_status.enemies_spawned = 0;
     wave_status.spawned_by_type.clear();
     wave_status.is_running = true;
@@ -105,6 +107,9 @@ pub fn check_wave_end(
     if !wave_status.is_running { return; }
     let all_spawned = wave_status.enemies_spawned >= wave_status.enemies_total;
     let all_dead = enemy_query.is_empty();
+
+    let still_to_spawn = wave_status.enemies_total.saturating_sub(wave_status.enemies_spawned);
+    wave_status.enemies_remaining = still_to_spawn + enemy_query.iter().count();
 
     if all_spawned && all_dead {
         wave_status.is_running = false;
