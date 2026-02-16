@@ -6,7 +6,7 @@ use bevy::mesh::Indices;
 use crate::config;
 use crate::player;
 use crate::GameState;
-use crate::enemies;
+use crate::enemies::{EnemyType, MovementType};
 
 #[derive(Component)]
 pub struct Enemy {
@@ -14,6 +14,8 @@ pub struct Enemy {
     pub speed: f32,
     pub damage: f32,
     pub price_tag: usize,
+    pub size: f32,
+    pub movement: MovementType,
 }
 
 pub struct EnemyPlugin;
@@ -62,8 +64,7 @@ pub fn spawn_enemy(
     angle_degrees: f32, 
     enemy_type: EnemyType,
 ) {
-    //Polygon must be 3 sides min
-    let sides = sides.max(3);
+    let enemy_data = enemy_type.get_config();
 
     let spawn_distance = config::ENEMY_SPAWN_DIST;
     let radians = angle_degrees.to_radians();
@@ -75,21 +76,21 @@ pub fn spawn_enemy(
     let rotation = Quat::from_rotation_z(angle_to_center - std::f32::consts::FRAC_PI_2);
 
     let mut verts = Vec::new();
-    let shape_radius = 15.0;
+    let shape_radius = enemy_data.size;
 
     verts.push([0.0, 0.0, 0.0]); 
 
-    for i in 0..sides {
-        let angle = (std::f32::consts::TAU / sides as f32) * i as f32;
+    for i in 0..enemy_data.sides {
+        let angle = (std::f32::consts::TAU / enemy_data.sides as f32) * i as f32;
         verts.push([shape_radius * angle.cos(), shape_radius * angle.sin(), 0.0]);
     }
 
-    let mut indices = Vec::new();
-    for i in 1..sides {
-        indices.extend_from_slice(&[0, i, i + 1]);
+    let mut indices: Vec<u32> = Vec::new();
+    for i in 1..enemy_data.sides {
+        indices.extend_from_slice(&[0, i as u32, i as u32 + 1]);
     }
     
-    indices.extend_from_slice(&[0, sides, 1]);
+    indices.extend_from_slice(&[0, enemy_data.sides as u32, 1]);
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD);
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, verts);
@@ -104,10 +105,12 @@ pub fn spawn_enemy(
             ..default()
         },
         Enemy {
-            health: config::ENEMY_HEALTH,
-            speed: config::ENEMY_SPEED,
-            damage: config::ENEMY_DAMAGE,
-            price_tag: config::ENEMY_PRICE,
+            health: enemy_data.health,
+            speed: enemy_data.speed,
+            damage: enemy_data.damage,
+            price_tag: enemy_data.reward,
+            movement: enemy_data.movement,
+            size: enemy_data.size,
         },
     ));
 }
@@ -116,7 +119,7 @@ pub fn take_damage(
     commands: &mut Commands,
     game_state: &mut GameState,
     entity: Entity,
-    enemy: &mut Enemy, // The component data
+    enemy: &mut Enemy,
     damage: f32
 ) {
     enemy.health -= damage;
