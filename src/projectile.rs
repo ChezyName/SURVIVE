@@ -83,7 +83,6 @@ fn projectile_collision(
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
             let distance = projectile_transform.translation.distance(enemy_transform.translation);
             if distance < config::BULLET_HIT_BOX {
-                println!("Enemy hit by Projectile with {} Damage", projectile.damage);
                 commands.entity(projectile_entity).despawn();
 
                 enemy::take_damage(&mut commands, &mut *game_state, enemy_entity, &mut enemy_comp, projectile.damage);

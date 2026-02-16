@@ -157,7 +157,7 @@ fn player_shooting(
                 player.bullet_speed,
             );
         }
-    } else {println!("Error finding Player")}
+    } else {info!("Error finding Player")}
 }
 
 pub fn take_damage(
@@ -169,6 +169,6 @@ pub fn take_damage(
     player.health -= damage;
 
     if player.health <= 0.0 {
-        println!("Player has died");
+        info!("Player has died");
     }
 }

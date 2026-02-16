@@ -6,6 +6,7 @@ use bevy::mesh::Indices;
 use crate::config;
 use crate::player;
 use crate::GameState;
+use crate::enemies;
 
 #[derive(Component)]
 pub struct Enemy {
@@ -48,8 +49,6 @@ fn enemy_collision_system(
 
             if distance < config::ENEMY_HIT_BOX {
                 commands.entity(enemy_entity).despawn();
-                
-                println!("Player hit by Enemy with {} Damage", enemy_comp.damage);
                 player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage);
             }
         }
@@ -61,7 +60,7 @@ pub fn spawn_enemy(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     angle_degrees: f32, 
-    sides: u32, 
+    enemy_type: EnemyType,
 ) {
     //Polygon must be 3 sides min
     let sides = sides.max(3);
