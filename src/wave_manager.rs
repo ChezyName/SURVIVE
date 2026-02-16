@@ -5,6 +5,7 @@ use crate::enemies::{EnemyType};
 use rand;
 use std::collections::HashMap;
 use crate::enemy;
+use rand::seq::SliceRandom;
 
 
 #[derive(Resource, Default)]
@@ -12,91 +13,83 @@ pub struct WaveStatus {
     pub is_running: bool,
     pub enemies_total: usize,
     pub enemies_remaining: usize,
-    pub enemies_spawned: usize,
     pub spawn_targets: HashMap<EnemyType, usize>,
     pub spawned_by_type: HashMap<EnemyType, usize>,
     pub spawn_timer: Timer,
+    pub spawn_queue: Vec<EnemyType>,
 }
 
 pub fn start_wave(
     mut commands: Commands,
     mut game_state: ResMut<GameState>,
     mut wave_status: ResMut<WaveStatus>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    // ... other params
 ) {
     game_state.round += 1;
-    wave_status.is_running = true;
-
     let wave = game_state.round;
 
+    // 1. Calculate Targets
     let mut targets = HashMap::new();
     targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
-    if (wave % config::WAVE_LARGE_ENEMY_WAVE == 0) { 
+    
+    if wave % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
         targets.insert(EnemyType::Large, wave / config::WAVE_LARGE_ENEMY_WAVE); 
     }
-
-    if (wave % config::WAVE_BOSS_ENEMY_WAVE == 0) { 
+    if wave % config::WAVE_BOSS_ENEMY_WAVE == 0 { 
         targets.insert(EnemyType::Boss, wave / config::WAVE_BOSS_ENEMY_WAVE); 
     }
 
-    let total: usize = targets.values().sum();
+    let mut queue = Vec::new();
+    for (etype, &count) in targets.iter() {
+        for _ in 0..count {
+            queue.push(*etype);
+        }
+    }
 
+    let mut rng = rand::rng();
+    queue.shuffle(&mut rng);
+
+    let total = queue.len();
     wave_status.spawn_targets = targets;
-    wave_status.enemies_total = total as usize;
-    wave_status.enemies_remaining = total as usize;
-    wave_status.enemies_spawned = 0;
+    wave_status.spawn_queue = queue;
+    wave_status.enemies_total = total;
+    wave_status.enemies_remaining = total;
     wave_status.spawned_by_type.clear();
     wave_status.is_running = true;
     wave_status.spawn_timer = Timer::from_seconds(1.0, TimerMode::Repeating);
 
-    info!("Starting Wave {}! Spawning {} enemies.", game_state.round, total);
+    info!("Wave {} started! Randomized queue ready with {} enemies.", wave, total);
 }
 
 pub fn spawn_tick_system(
     time: Res<Time>,
     mut wave_status: ResMut<WaveStatus>,
+    game_state: Res<GameState>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    enemy_query: Query<&Enemy>,
 ) {
     if !wave_status.is_running { return; }
-
     wave_status.spawn_timer.tick(time.delta());
 
     if wave_status.spawn_timer.just_finished() {
-        let current_on_screen = enemy_query.iter().count();
-        
-        if current_on_screen < config::WAVE_MAX_ENEMIES_PER_FRAME && 
-           wave_status.enemies_spawned < wave_status.enemies_total 
-        {
-            let type_to_spawn = wave_status.spawn_targets.iter().find_map(|(etype, &target)| {
-                let current_spawned = wave_status.spawned_by_type.get(etype).unwrap_or(&0);
-                if *current_spawned < target {
-                    Some(*etype)
-                } else {
-                    None
-                }
-            });
+        let wave = game_state.round;
 
-            if let Some(etype) = type_to_spawn {
+        let min_spawn = config::WAVE_ENEMIES_PER_FRAME[0] as f32;
+        let max_spawn = config::WAVE_ENEMIES_PER_FRAME[1] as f32;
+        let spawn_burst_limit = rand::random_range(min_spawn..max_spawn) as usize;
+
+        for _ in 0..spawn_burst_limit {
+            if let Some(etype) = wave_status.spawn_queue.pop() {
                 let angle: f32 = rand::random_range(0.0..360.0);
-
-                enemy::spawn_enemy(
-                    &mut commands, 
-                    &mut meshes, 
-                    &mut materials, 
-                    angle, 
-                    etype
-                );
-
-                wave_status.enemies_spawned += 1;
-                *wave_status.spawned_by_type.entry(etype).or_insert(0) += 1;
-                
-                info!("Spawned {:?}. Total: {}/{}", etype, wave_status.enemies_spawned, wave_status.enemies_total);
-            }
+                enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, angle, etype);
+            } else { break; }
         }
+
+        let min_ms = config::WAVE_ENEMIES_TIME_PER_FRAME[0] as f32;
+        let max_ms = config::WAVE_ENEMIES_TIME_PER_FRAME[1] as f32;
+        let random_ms = rand::random_range(min_ms..max_ms);
+        wave_status.spawn_timer.set_duration(std::time::Duration::from_millis(random_ms as u64));
     }
 }
 
@@ -105,16 +98,16 @@ pub fn check_wave_end(
     enemy_query: Query<&Enemy>,
 ) {
     if !wave_status.is_running { return; }
-    let all_spawned = wave_status.enemies_spawned >= wave_status.enemies_total;
+    let all_spawned = wave_status.spawn_queue.is_empty();
     let all_dead = enemy_query.is_empty();
 
-    let still_to_spawn = wave_status.enemies_total.saturating_sub(wave_status.enemies_spawned);
+    let still_to_spawn = wave_status.spawn_queue.len();
     wave_status.enemies_remaining = still_to_spawn + enemy_query.iter().count();
 
     if all_spawned && all_dead {
         wave_status.is_running = false;
         
-        info!("Wave Complete! Total Spawned: {}. All enemies defeated.", wave_status.enemies_spawned);
+        info!("Wave Complete! Total Spawned: {}. All enemies defeated.", wave_status.enemies_total);
 
         //Start Shop State
     }

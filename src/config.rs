@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use crate::enemies::{EnemyType, MovementType};
+use rand;
 
 //Player Defaults
 pub const PLAYER_MAX_HEALTH: f32 = 100.0;
@@ -19,10 +20,11 @@ pub const BULLET_HIT_BOX: f32 = 2.0;
 pub const ENEMY_SPAWN_DIST: f32 = 800.0;
 
 //Wave Spawning
-pub const WAVE_MAX_ENEMIES_PER_FRAME: usize = 100;
+pub const WAVE_ENEMIES_PER_FRAME: [i32; 2] = [5, 50]; //How Many Enemies (Min - Max) Can Spawn Per Frame
+pub const WAVE_ENEMIES_TIME_PER_FRAME: [i32; 2] = [50, 1000]; //How Much Time Between The Frames (Min - Max) in ms
 pub const WAVE_ENEMIES_PER_WAVE: usize = 3; //How Many Enemies Per Wave
-pub const WAVE_LARGE_ENEMY_WAVE: usize = 1; //Spawn Large Enemies Every 5 Waves x Wave 
-pub const WAVE_BOSS_ENEMY_WAVE: usize = 1; //Spawn Boss Enemy Every 10 Waves x Wave
+pub const WAVE_LARGE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves x Wave 
+pub const WAVE_BOSS_ENEMY_WAVE: usize = 10; //Spawn Boss Enemy Every 10 Waves x Wave
 
 //Enemy Configs
 pub struct EnemyConfig {
@@ -36,37 +38,44 @@ pub struct EnemyConfig {
     pub movement: MovementType,
 }
 
+fn lerp(start: f32, end: f32, t: f32) -> f32 {
+    start + t * (end - start)
+}
+
 impl EnemyType {
     pub fn get_config(&self) -> EnemyConfig {
+        let level: f32 = rand::random_range(0.0..1.0);
+
         match self {
             EnemyType::Normal => EnemyConfig {
-                health: 10.0,
-                damage: 10.0,
-                sides: 3,
-                size: 15.0,
-                is_boss: false,
                 reward: 10,
-                speed: 100.0,
+                health:   lerp(10.0, 20.0, level),
+                damage:   lerp(2.0, 10.0, level),
+                size:     lerp(15.0, 30.0, level),
+                speed:    lerp(250.0, 100.0, level), 
+                reward:   lerp(10.0, 20.0, level) as usize,
+                sides:    3,
+                is_boss:  false,
                 movement: MovementType::Line,
             },
             EnemyType::Large => EnemyConfig {
-                health: 25.0,
-                damage: 5.0,
-                sides: 4,
-                size: 12.0,
-                is_boss: false,
-                reward: 15,
-                speed: 250.0,
+                health:   lerp(25.0, 100.0, level),
+                damage:   lerp(10.0, 50.0, level),
+                size:     lerp(20.0, 50.0, level),
+                speed:    lerp(125.0, 50.0, level),
+                reward:   lerp(50.0, 100.0, level) as usize,
+                sides:    4,
+                is_boss:  false,
                 movement: MovementType::Line,
             },
             EnemyType::Boss => EnemyConfig {
-                health: 500.0,
-                damage: 250.0,
-                sides: 360,
-                size: 80.0,
-                is_boss: true,
-                reward: 500,
-                speed: 50.0,
+                health:   lerp(250.0, 500.0, level),
+                damage:   lerp(50.0, 100.0, level),
+                size:     lerp(80.0, 125.0, level),
+                speed:    lerp(24.0, 12.0, level),
+                reward:   lerp(375.0, 750.0, level) as usize,
+                sides:    30,
+                is_boss:  true,
                 movement: MovementType::Line,
             },
         }
