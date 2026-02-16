@@ -31,8 +31,13 @@ pub fn start_wave(
 
     let mut targets = HashMap::new();
     targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
-    targets.insert(EnemyType::Large, wave / config::WAVE_ENEMIES_PER_WAVE);
-    targets.insert(EnemyType::Boss, wave / config::WAVE_ENEMIES_PER_WAVE);
+    if (wave % config::WAVE_LARGE_ENEMY_WAVE == 0) { 
+        targets.insert(EnemyType::Large, wave / config::WAVE_LARGE_ENEMY_WAVE); 
+    }
+
+    if (wave % config::WAVE_BOSS_ENEMY_WAVE == 0) { 
+        targets.insert(EnemyType::Boss, wave / config::WAVE_BOSS_ENEMY_WAVE); 
+    }
 
     let total: usize = targets.values().sum();
 

@@ -49,7 +49,7 @@ fn enemy_collision_system(
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
             let distance = player_transform.translation.distance(enemy_transform.translation);
 
-            if distance < config::ENEMY_HIT_BOX {
+            if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {
                 commands.entity(enemy_entity).despawn();
                 player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage);
             }
