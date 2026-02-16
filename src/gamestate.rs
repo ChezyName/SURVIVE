@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 #[derive(Resource, Default)]
 pub struct GameState {
-    pub round: u32,
-    pub money: u32,
+    pub round: usize,
+    pub money: usize,
 }
 

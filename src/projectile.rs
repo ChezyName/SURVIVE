@@ -2,9 +2,8 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
-use crate::{config, enemy};
+use crate::{config, enemy, GameState};
 use crate::enemy::Enemy;
-use crate::enemy::take_damage;
 
 #[derive(Component)]
 pub struct Projectile {
@@ -78,6 +77,7 @@ fn projectile_collision(
     mut commands: Commands,
     projectile_query: Query<(Entity, &Transform, &Projectile)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
+    mut game_state: ResMut<GameState>,
 ) {
     for (projectile_entity, projectile_transform, projectile) in &projectile_query {
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
@@ -86,7 +86,7 @@ fn projectile_collision(
                 println!("Enemy hit by Projectile with {} Damage", projectile.damage);
                 commands.entity(projectile_entity).despawn();
 
-                take_damage(&mut commands, enemy_entity, &mut enemy_comp, projectile.damage);
+                enemy::take_damage(&mut commands, &mut *game_state, enemy_entity, &mut enemy_comp, projectile.damage);
                 break;
             }
         }

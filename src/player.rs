@@ -20,8 +20,8 @@ pub struct Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
-            fire_timer: Timer::from_seconds(60.0/config::FIRE_RATE, TimerMode::Once),
-            fire_rate: config::FIRE_RATE,
+            fire_timer: Timer::from_seconds(60.0/config::PLAYER_FIRE_RATE, TimerMode::Once),
+            fire_rate: config::PLAYER_FIRE_RATE,
             damage: config::BULLET_DAMAGE,
             bullet_speed: config::BULLET_SPEED,
             health: config::PLAYER_MAX_HEALTH,

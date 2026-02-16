@@ -12,7 +12,7 @@ pub struct Enemy {
     pub health: f32,
     pub speed: f32,
     pub damage: f32,
-    pub price_tag: u32,
+    pub price_tag: usize,
 }
 
 pub struct EnemyPlugin;
@@ -115,6 +115,7 @@ pub fn spawn_enemy(
 
 pub fn take_damage(
     commands: &mut Commands,
+    game_state: &mut GameState,
     entity: Entity,
     enemy: &mut Enemy, // The component data
     damage: f32
@@ -123,6 +124,6 @@ pub fn take_damage(
 
     if enemy.health <= 0.0 {
         commands.entity(entity).despawn();
-        //game_state.money += enemy.price_tag;
+        game_state.money += enemy.price_tag;
     }
 }

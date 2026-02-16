@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::player::Player;
 use crate::config;
+use crate::GameState;
 
 #[derive(Component)]
 pub struct HealthValueText;
@@ -10,6 +11,9 @@ pub struct HealthBarText;
 
 #[derive(Component)]
 pub struct HealthSegment(pub usize);
+
+#[derive(Component)]
+pub struct GameStateText;
 
 pub struct PlayerUIPlugin;
 
@@ -85,20 +89,55 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                     ));
                 }
             });
+
+            inner.spawn((
+                Text::new("Wave {} | ${}"),
+                TextFont {
+                    font_size: 20.0,
+                    font: font.clone(),
+                    ..default()
+                },
+                TextColor(Color::WHITE),
+                GameStateText,
+            ));
         });
     });
+}
+
+pub fn format_currency(value: usize) -> String {
+    let val = value as f32;
+
+    if value >= 1_000_000_000_000 {
+        format!("{:.1}T", val / 1_000_000_000_000.0)
+    } else if value >= 1_000_000_000 {
+        format!("{:.1}B", val / 1_000_000_000.0)
+    } else if value >= 1_000_000 {
+        format!("{:.1}M", val / 1_000_000.0)
+    } else if value >= 1_000 {
+        format!("{:.1}k", val / 1_000.0)
+    } else {
+        value.to_string()
+    }
+    .replace(".0", "")
 }
 
 fn update_player_ui(
     player_query: Query<&Player>,
     mut segment_query: Query<(&HealthSegment, &mut Visibility, &mut BackgroundColor, &mut Node)>,
     mut text_query: Query<&mut Text, With<HealthValueText>>,
+    mut gamestate_query: Query<&mut Text, (With<GameStateText>, Without<HealthValueText>)>,
+    game_state: Res<GameState>,
 ) {
     let Ok(player) = player_query.single() else { return; };
 
-    // Update Text
+    // Update HP Text
     if let Ok(mut text) = text_query.single_mut() {
         text.0 = format!("{:.0} HP", player.health);
+    }
+
+    // Update GS Text
+    if let Ok(mut text) = gamestate_query.single_mut() {
+        text.0 = format!("[Wave {} | ${}]", game_state.round, format_currency(game_state.money));
     }
 
     // 1 pip per 10 HP (Change this to adjust granularity)
