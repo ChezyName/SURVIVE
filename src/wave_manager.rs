@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{GameState, config};
 use crate::enemy::{Enemy};
-use crate::enemies::{EnemyType};
+use crate::enemy::{EnemyType};
 use rand;
 use std::collections::HashMap;
 use crate::enemy;
@@ -32,8 +32,14 @@ pub fn start_wave(
     let mut targets = HashMap::new();
     targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
     
+    if wave % config::WAVE_UNIQUE_ENEMY_WAVE == 0 { 
+        targets.insert(EnemyType::Unique, wave / config::WAVE_UNIQUE_ENEMY_WAVE); 
+    }
     if wave % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
         targets.insert(EnemyType::Large, wave / config::WAVE_LARGE_ENEMY_WAVE); 
+    }
+    if wave % config::WAVE_COLOSSAL_ENEMY_WAVE == 0 { 
+        targets.insert(EnemyType::Colossal, wave / config::WAVE_COLOSSAL_ENEMY_WAVE); 
     }
     if wave % config::WAVE_BOSS_ENEMY_WAVE == 0 { 
         targets.insert(EnemyType::Boss, wave / config::WAVE_BOSS_ENEMY_WAVE); 

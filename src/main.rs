@@ -6,7 +6,6 @@ mod gamestate;
 mod ui;
 mod items;
 mod wave_manager;
-mod enemies;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use crate::enemies::{EnemyType, MovementType};
-use rand;
+use crate::enemy::{EnemyType, MovementType};
+use rand::{self, seq::IndexedRandom, seq::SliceRandom};
 
 //Player Defaults
 pub const PLAYER_MAX_HEALTH: f32 = 100.0;
@@ -23,8 +23,10 @@ pub const ENEMY_SPAWN_DIST: f32 = 800.0;
 pub const WAVE_ENEMIES_PER_FRAME: [i32; 2] = [5, 50]; //How Many Enemies (Min - Max) Can Spawn Per Frame
 pub const WAVE_ENEMIES_TIME_PER_FRAME: [i32; 2] = [50, 1000]; //How Much Time Between The Frames (Min - Max) in ms
 pub const WAVE_ENEMIES_PER_WAVE: usize = 3; //How Many Enemies Per Wave
-pub const WAVE_LARGE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves x Wave 
-pub const WAVE_BOSS_ENEMY_WAVE: usize = 10; //Spawn Boss Enemy Every 10 Waves x Wave
+pub const WAVE_UNIQUE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 2 (Other) Waves
+pub const WAVE_LARGE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves
+pub const WAVE_COLOSSAL_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves
+pub const WAVE_BOSS_ENEMY_WAVE: usize = 10; //Spawn Boss Enemy Every 10 Waves
 
 //Enemy Configs
 pub struct EnemyConfig {
@@ -42,6 +44,13 @@ fn lerp(start: f32, end: f32, t: f32) -> f32 {
     start + t * (end - start)
 }
 
+pub fn rand_type(allowed_types: &[MovementType]) -> MovementType {
+    let mut rng = rand::rng();
+    *allowed_types
+        .choose(&mut rng)
+        .unwrap_or(&MovementType::Line)
+}
+
 impl EnemyType {
     pub fn get_config(&self) -> EnemyConfig {
         let level: f32 = rand::random_range(0.0..1.0);
@@ -57,25 +66,45 @@ impl EnemyType {
                 is_boss:  false,
                 movement: MovementType::Line,
             },
+            EnemyType::Unique => EnemyConfig {
+                health:   lerp(30.0, 5.0, level),
+                damage:   lerp(30.0, 5.0, level),
+                size:     lerp(20.0, 5.0, level),
+                speed:    lerp(350.0, 50.0, level), 
+                reward:   lerp(100.0, 10.0, level) as usize,
+                sides:    4,
+                is_boss:  false,
+                movement: MovementType::Switch,
+            },
             EnemyType::Large => EnemyConfig {
                 health:   lerp(25.0, 100.0, level),
                 damage:   lerp(10.0, 50.0, level),
                 size:     lerp(20.0, 50.0, level),
                 speed:    lerp(125.0, 50.0, level),
                 reward:   lerp(50.0, 100.0, level) as usize,
-                sides:    4,
+                sides:    lerp(6.0, 10.0, level) as usize,
                 is_boss:  false,
-                movement: MovementType::Line,
+                movement: rand_type(&[MovementType::Line, MovementType::Circular]),
             },
-            EnemyType::Boss => EnemyConfig {
+            EnemyType::Colossal => EnemyConfig {
                 health:   lerp(250.0, 500.0, level),
                 damage:   lerp(50.0, 100.0, level),
                 size:     lerp(80.0, 125.0, level),
                 speed:    lerp(24.0, 12.0, level),
                 reward:   lerp(375.0, 750.0, level) as usize,
                 sides:    30,
+                is_boss:  false,
+                movement: rand_type(&[MovementType::Line, MovementType::ZigZag]),
+            },
+            EnemyType::Boss => EnemyConfig {
+                health:   lerp(500.0, 100.0, level),
+                damage:   lerp(100.0, 500.0, level),
+                size:     lerp(250.0, 50.0, level),
+                speed:    lerp(80.0, 500.0, level), 
+                reward:   1000,
+                sides:    100,
                 is_boss:  true,
-                movement: MovementType::Line,
+                movement: MovementType::Switch,
             },
         }
     }

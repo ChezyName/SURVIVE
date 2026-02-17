@@ -6,7 +6,6 @@ use bevy::mesh::Indices;
 use crate::config;
 use crate::player;
 use crate::GameState;
-use crate::enemies::{EnemyType, MovementType};
 
 #[derive(Component)]
 pub struct Enemy {
@@ -16,6 +15,23 @@ pub struct Enemy {
     pub price_tag: usize,
     pub size: f32,
     pub movement: MovementType,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum MovementType {
+    Line,
+    Circular,   //Curves Towards The Player
+    ZigZag,     //Goes in Zigs
+    Switch,     //Swaps Between Multiple Movement Modes
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum EnemyType {
+    Normal,     //Regular Line Enemies
+    Unique,     //Smaller Fast / Movement Enemies
+    Large,      //Larger Tanky Enemies
+    Colossal,   //Massive Tanky Enemies
+    Boss,       //Boss Enemeis with Unique Properties
 }
 
 pub struct EnemyPlugin;
@@ -35,7 +51,7 @@ fn enemy_ai_system(
         for (mut enemy_transform, enemy_stats) in &mut enemy_query {
             let dir = (player_transform.translation - enemy_transform.translation).normalize_or_zero();
             enemy_transform.translation += dir * enemy_stats.speed * time.delta_secs();
-            enemy_transform.rotation = Quat::from_rotation_z(dir.y.atan2(dir.x) - std::f32::consts::FRAC_PI_2);
+            //enemy_transform.rotation = Quat::from_rotation_z(dir.y.atan2(dir.x) - std::f32::consts::FRAC_PI_2);
         }
     }
 }
@@ -65,6 +81,7 @@ pub fn spawn_enemy(
     enemy_type: EnemyType,
 ) {
     let enemy_data = enemy_type.get_config();
+    let sides = enemy_data.sides.max(3); //polygons are 3 sides min
 
     let spawn_distance = config::ENEMY_SPAWN_DIST;
     let radians = angle_degrees.to_radians();
@@ -72,25 +89,32 @@ pub fn spawn_enemy(
     let y = spawn_distance * radians.sin();
     let position = Vec3::new(x, y, 0.0);
 
-    let angle_to_center = (Vec2::ZERO - position.xy()).to_angle();
-    let rotation = Quat::from_rotation_z(angle_to_center - std::f32::consts::FRAC_PI_2);
+    let direction_to_center = Vec2::ZERO - position.xy();
+    let angle = direction_to_center.y.atan2(direction_to_center.x);
+    let rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
 
     let mut verts = Vec::new();
     let shape_radius = enemy_data.size;
 
     verts.push([0.0, 0.0, 0.0]); 
 
-    for i in 0..enemy_data.sides {
-        let angle = (std::f32::consts::TAU / enemy_data.sides as f32) * i as f32;
+    for i in 0..sides {
+        let start_offset = if sides == 3 { 
+            std::f32::consts::FRAC_PI_2 //Triangle Fix
+        } else if sides == 4 { 
+            std::f32::consts::FRAC_PI_4 //45deg for Squares
+        } else { 0.0 };
+
+        let angle = start_offset + (std::f32::consts::TAU / sides as f32) * i as f32;
         verts.push([shape_radius * angle.cos(), shape_radius * angle.sin(), 0.0]);
     }
 
     let mut indices: Vec<u32> = Vec::new();
-    for i in 1..enemy_data.sides {
+    for i in 1..sides {
         indices.extend_from_slice(&[0, i as u32, i as u32 + 1]);
     }
     
-    indices.extend_from_slice(&[0, enemy_data.sides as u32, 1]);
+    indices.extend_from_slice(&[0, sides as u32, 1]);
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD);
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, verts);
