@@ -4,6 +4,7 @@ use std::f32::consts::PI;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
+use crate::AppState;
 use crate::projectile;
 use crate::config;
 
@@ -35,7 +36,7 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player)
-           .add_systems(Update, (player_aim_system, player_shooting));
+           .add_systems(Update, (player_aim_system, player_shooting).run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -165,10 +166,12 @@ pub fn take_damage(
     entity: Entity,
     player: &mut Player, // self
     damage: f32,
+    next_state: &mut ResMut<NextState<AppState>>,
 ) {
     player.health -= damage;
 
     if player.health <= 0.0 {
         info!("Player has died");
+        next_state.set(AppState::GameOver);
     }
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{GameState, config};
+use crate::{AppState, GameState, config};
 use crate::enemy::{Enemy};
 use crate::enemy::{EnemyType};
 use rand;
@@ -102,6 +102,7 @@ pub fn spawn_tick_system(
 pub fn check_wave_end(
     mut wave_status: ResMut<WaveStatus>,
     enemy_query: Query<&Enemy>,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
     if !wave_status.is_running { return; }
     let all_spawned = wave_status.spawn_queue.is_empty();
@@ -116,5 +117,6 @@ pub fn check_wave_end(
         info!("Wave Complete! Total Spawned: {}. All enemies defeated.", wave_status.enemies_total);
 
         //Start Shop State
+        next_state.set(AppState::Shop)
     }
 }

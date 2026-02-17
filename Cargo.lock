@@ -7,6 +7,7 @@ name = "SURVIVE"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "inventory",
  "rand 0.10.0",
 ]
 

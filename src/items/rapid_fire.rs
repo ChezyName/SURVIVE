@@ -1,45 +1,35 @@
-use super::ItemLogic;
+use super::{Item, ItemFactory};
 use crate::player::Player;
 use crate::config;
 
-const MAX_LEVEL: u32 = 5;
-const FIRE_RATE_PER_LEVEL: f32 = 600.0;
+const FIRE_RATE_INCREASE: f32 = 15.0;
+const COST: usize = 25;
 
-#[derive(Clone)]
-pub struct RapidFire {
-    pub level: u32,
-}
+#[derive(Clone, Default)]
+pub struct RapidFire;
 
-impl Default for RapidFire {
-    fn default() -> Self {
-        Self {
-            level: 1,
-        }
-    }
-}
-
-impl ItemLogic for RapidFire {
+impl Item for RapidFire {
     fn name(&self) -> String {
-        format!("Rapid Fire (Lvl {})", self.level)
+        "Rapid Fire".to_string()
     }
 
-    fn can_upgrade(&self) -> bool {
-        self.level < MAX_LEVEL
-    }
+    fn cost(&self) -> usize { COST }
 
-    fn upgrade(&mut self) {
-        if self.can_upgrade() {
-            self.level += 1;
-        }
+    fn description(&self) -> String {
+        format!("Increases Fire Rate by {}", FIRE_RATE_INCREASE)
     }
 
     fn apply(&self, player: &mut Player) {
-        let fire_rate = config::PLAYER_FIRE_RATE + (self.level as f32 * FIRE_RATE_PER_LEVEL);
+        let fire_rate = player.fire_rate + FIRE_RATE_INCREASE;
         player.fire_rate = fire_rate;
-        player.fire_timer = Timer::from_seconds(60.0/fire_rate, TimerMode::Once);
+        player.fire_timer.set_duration(std::time::Duration::from_secs_f32(60.0/fire_rate));
     }
 
-    fn clone_item(&self) -> Box<dyn ItemLogic> {
+    fn is_unique(&self) -> bool { false }
+
+    fn clone_box(&self) -> Box<dyn Item> {
         Box::new(self.clone())
     }
 }
+
+inventory::submit!(ItemFactory(|| Box::new(RapidFire::default())));

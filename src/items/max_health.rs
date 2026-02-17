@@ -1,0 +1,33 @@
+use super::{Item, ItemFactory};
+use crate::player::Player;
+
+const HEALTH_INCREASE: f32 = 10.0;
+const COST: usize = 15;
+
+#[derive(Clone, Default)]
+pub struct MaxHealth;
+
+impl Item for MaxHealth {
+    fn name(&self) -> String {
+        "Iron Heart".to_string()
+    }
+
+    fn cost(&self) -> usize { COST }
+
+    fn description(&self) -> String {
+        format!("Increases Max Health by {}", HEALTH_INCREASE)
+    }
+
+    fn apply(&self, player: &mut Player) {
+        player.max_health = player.max_health + HEALTH_INCREASE;
+        player.health = (player.health + HEALTH_INCREASE).min(player.max_health);
+    }
+
+    fn is_unique(&self) -> bool { false }
+
+    fn clone_box(&self) -> Box<dyn Item> {
+        Box::new(self.clone())
+    }
+}
+
+inventory::submit!(ItemFactory(|| Box::new(MaxHealth::default())));

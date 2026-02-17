@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
+use crate::AppState;
 use crate::player::Player;
 use bevy::mesh::Indices;
 use crate::config;
@@ -111,6 +112,7 @@ fn enemy_collision_system(
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform, &mut Player)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
+    mut next_state: ResMut<NextState<AppState>>,
 ) {
     for (player_entity, player_transform, mut player_comp) in &mut player_query {
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
@@ -118,7 +120,7 @@ fn enemy_collision_system(
 
             if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {
                 commands.entity(enemy_entity).despawn();
-                player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage);
+                player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage, &mut next_state);
             }
         }
     }

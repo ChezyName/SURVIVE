@@ -1,11 +1,12 @@
 mod player;
+mod player_ui;
 mod projectile;
 mod config;
 mod enemy;
 mod gamestate;
-mod ui;
 mod items;
 mod wave_manager;
+mod shop;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
@@ -22,16 +23,20 @@ pub enum AppState {
 
 fn main() {
     App::new()
+        .add_plugins(DefaultPlugins)//Defaults
         .insert_resource(ClearColor(Color::BLACK))
         .insert_resource(GameState::default())
-        .add_plugins(DefaultPlugins)
+        .init_state::<AppState>()
         .init_resource::<wave_manager::WaveStatus>()
-        .add_systems(Startup, wave_manager::start_wave)
-        .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end).chain())
+        //Gameplay
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
+        .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave)
+        .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end).chain().run_if(in_state(AppState::InGame)))
         .add_plugins(player::PlayerPlugin)// Player
-        .add_plugins(ui::player::PlayerUIPlugin) //Player UI
+        .add_plugins(player_ui::PlayerUIPlugin) //Player UI
         .add_plugins(projectile::ProjectilePlugin)// Projectiles
         .add_plugins(enemy::EnemyPlugin)// Enemies
+        //Shop
+        .add_plugins(shop::ShopPlugin)
         .run();
 }
