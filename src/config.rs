@@ -18,6 +18,7 @@ pub const BULLET_HIT_BOX: f32 = 2.0;
 
 //Basic Enemy Stuff, Multiplies Later
 pub const ENEMY_SPAWN_DIST: f32 = 800.0;
+pub const ENEMY_SWITCH_TIME_RANGE: [f32; 2] = [150.0, 1500.0]; //time range in ms
 
 //Wave Spawning
 pub const WAVE_ENEMIES_PER_FRAME: [i32; 2] = [5, 50]; //How Many Enemies (Min - Max) Can Spawn Per Frame
@@ -40,7 +41,7 @@ pub struct EnemyConfig {
     pub movement: MovementType,
 }
 
-fn lerp(start: f32, end: f32, t: f32) -> f32 {
+pub fn lerp(start: f32, end: f32, t: f32) -> f32 {
     start + t * (end - start)
 }
 

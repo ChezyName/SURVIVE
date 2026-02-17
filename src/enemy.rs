@@ -15,9 +15,13 @@ pub struct Enemy {
     pub price_tag: usize,
     pub size: f32,
     pub movement: MovementType,
+    pub is_switch: bool,
+    pub rand_bool: bool,
+    pub switch_timer: Timer,
+    pub switch_time_range: [f32; 2],
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum MovementType {
     Line,
     Circular,   //Curves Towards The Player
@@ -45,13 +49,60 @@ impl Plugin for EnemyPlugin {
 fn enemy_ai_system(
     time: Res<Time>,
     player_query: Query<&Transform, With<Player>>,
-    mut enemy_query: Query<(&mut Transform, &Enemy), Without<Player>>,
+   mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
 ) {
     if let Ok(player_transform) = player_query.single() {
-        for (mut enemy_transform, enemy_stats) in &mut enemy_query {
-            let dir = (player_transform.translation - enemy_transform.translation).normalize_or_zero();
-            enemy_transform.translation += dir * enemy_stats.speed * time.delta_secs();
-            //enemy_transform.rotation = Quat::from_rotation_z(dir.y.atan2(dir.x) - std::f32::consts::FRAC_PI_2);
+        let seconds = time.elapsed_secs();
+
+        for (mut enemy_transform, mut enemy_stats) in enemy_query.iter_mut() {
+            enemy_stats.switch_timer.tick(time.delta());
+
+            let to_player = (player_transform.translation - enemy_transform.translation).normalize_or_zero();
+
+            if enemy_stats.movement == MovementType::Switch || (enemy_stats.is_switch && enemy_stats.switch_timer.is_finished()) {
+                //switch movement type
+                let new_movement = match rand::random_range(0..3) {
+                    0 => MovementType::Line,
+                    1 => MovementType::Circular,
+                    2 => MovementType::ZigZag,
+                    _ => MovementType::Line, //defaults to line
+                };
+
+                enemy_stats.movement = new_movement;
+                let random_ms = rand::random_range(enemy_stats.switch_time_range[0]..enemy_stats.switch_time_range[1]);
+                enemy_stats.switch_timer.set_duration(std::time::Duration::from_millis(random_ms as u64));
+            }
+            
+            let move_dir = match enemy_stats.movement {
+                MovementType::Line => to_player,
+
+                MovementType::Circular => {
+                    let distance = enemy_transform.translation.distance(player_transform.translation);
+                    let t = (distance / config::ENEMY_SPAWN_DIST).clamp(0.0, 1.0);
+                    let curve_strength = config::lerp(0.5, 1.0, t); 
+
+                    let offset_angle = seconds.sin() * curve_strength;
+                    let modifier: i32 = if enemy_stats.rand_bool { -1 } else { 1 };
+                    Quat::from_rotation_z(modifier as f32 * offset_angle) * to_player
+                }
+
+                MovementType::ZigZag => {
+                    let perpendicular = Vec3::new(-to_player.y, to_player.x, 0.0);
+                    let zig_frequency = 2.0;
+                    let zig_amplitude = 5.0;
+                    let side_step = perpendicular * (seconds * zig_frequency).sin() * zig_amplitude;
+                    (to_player + side_step).normalize()
+                }
+
+                MovementType::Switch => { to_player } //default to line if zig-zag
+            };
+
+            enemy_transform.translation += move_dir * enemy_stats.speed * time.delta_secs();
+
+            if move_dir != Vec3::ZERO {
+                let angle = move_dir.y.atan2(move_dir.x);
+                enemy_transform.rotation = Quat::from_rotation_z(angle - std::f32::consts::FRAC_PI_2);
+            }
         }
     }
 }
@@ -135,6 +186,10 @@ pub fn spawn_enemy(
             price_tag: enemy_data.reward,
             movement: enemy_data.movement,
             size: enemy_data.size,
+            is_switch: enemy_data.movement == MovementType::Switch,
+            switch_timer: Timer::from_seconds(config::lerp(config::ENEMY_SWITCH_TIME_RANGE[0], config::ENEMY_SWITCH_TIME_RANGE[1], rand::random_range(0.0..1.0)), TimerMode::Repeating),
+            switch_time_range: config::ENEMY_SWITCH_TIME_RANGE,
+            rand_bool: rand::random_bool(0.5),
         },
     ));
 }
