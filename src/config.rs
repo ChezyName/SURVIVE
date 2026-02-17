@@ -23,8 +23,8 @@ pub const ENEMY_SPAWN_DIST: f32 = 800.0;
 pub const WAVE_ENEMIES_PER_FRAME: [i32; 2] = [5, 50]; //How Many Enemies (Min - Max) Can Spawn Per Frame
 pub const WAVE_ENEMIES_TIME_PER_FRAME: [i32; 2] = [50, 1000]; //How Much Time Between The Frames (Min - Max) in ms
 pub const WAVE_ENEMIES_PER_WAVE: usize = 3; //How Many Enemies Per Wave
-pub const WAVE_UNIQUE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 2 (Other) Waves
-pub const WAVE_LARGE_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves
+pub const WAVE_UNIQUE_ENEMY_WAVE: usize = 2; //Spawn Large Enemies Every 2 (Other) Waves
+pub const WAVE_LARGE_ENEMY_WAVE: usize = 3; //Spawn Large Enemies Every 3 Waves
 pub const WAVE_COLOSSAL_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves
 pub const WAVE_BOSS_ENEMY_WAVE: usize = 10; //Spawn Boss Enemy Every 10 Waves
 
@@ -82,7 +82,7 @@ impl EnemyType {
                 size:     lerp(20.0, 50.0, level),
                 speed:    lerp(125.0, 50.0, level),
                 reward:   lerp(50.0, 100.0, level) as usize,
-                sides:    lerp(6.0, 10.0, level) as usize,
+                sides:    6,
                 is_boss:  false,
                 movement: rand_type(&[MovementType::Line, MovementType::Circular]),
             },
@@ -92,15 +92,15 @@ impl EnemyType {
                 size:     lerp(80.0, 125.0, level),
                 speed:    lerp(24.0, 12.0, level),
                 reward:   lerp(375.0, 750.0, level) as usize,
-                sides:    30,
+                sides:    8,
                 is_boss:  false,
                 movement: rand_type(&[MovementType::Line, MovementType::ZigZag]),
             },
             EnemyType::Boss => EnemyConfig {
-                health:   lerp(500.0, 100.0, level),
-                damage:   lerp(100.0, 500.0, level),
-                size:     lerp(250.0, 50.0, level),
-                speed:    lerp(80.0, 500.0, level), 
+                health:   lerp(400.0, 1000.0, level),
+                damage:   lerp(400.0, 800.0, level),
+                size:     lerp(150.0, 350.0, level),
+                speed:    lerp(50.0, 10.0, level), 
                 reward:   1000,
                 sides:    100,
                 is_boss:  true,
