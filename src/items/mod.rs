@@ -23,3 +23,4 @@ inventory::collect!(ItemFactory);
 pub mod rapid_fire;
 pub mod max_health;
 pub mod damage;
+pub mod shotgun;

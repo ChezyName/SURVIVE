@@ -14,6 +14,8 @@ pub struct Player {
     pub fire_rate: f32,
     pub damage: f32,
     pub bullet_speed: f32,
+    pub pellets: usize,
+    pub bullet_spread: f32,
     pub health: f32,
     pub max_health: f32,
 }
@@ -25,6 +27,8 @@ impl Default for Player {
             fire_rate: config::PLAYER_FIRE_RATE,
             damage: config::BULLET_DAMAGE,
             bullet_speed: config::BULLET_SPEED,
+            pellets: 1,
+            bullet_spread: 0.0,
             health: config::PLAYER_MAX_HEALTH,
             max_health: config::PLAYER_MAX_HEALTH,
         }
@@ -149,14 +153,20 @@ fn player_shooting(
         if mouse_input.pressed(MouseButton::Left) && player.fire_timer.is_finished() {
             player.fire_timer.reset();
 
-            projectile::spawn_projectile(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                *transform,
-                player.damage,
-                player.bullet_speed,
-            );
+            for i in 0..player.pellets {
+                let mut b_transform = *transform;
+                if player.bullet_spread > 0.0 {
+                    b_transform.rotate_z(rand::random_range(-player.bullet_spread..player.bullet_spread).to_radians());
+                }
+                projectile::spawn_projectile(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    b_transform,
+                    player.damage,
+                    player.bullet_speed,
+                );
+            }
         }
     } else {info!("Error finding Player")}
 }
