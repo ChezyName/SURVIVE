@@ -7,6 +7,7 @@ mod gamestate;
 mod items;
 mod wave_manager;
 mod shop;
+mod player_stats;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
@@ -34,6 +35,7 @@ fn main() {
         .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end).chain().run_if(in_state(AppState::InGame)))
         .add_plugins(player::PlayerPlugin)// Player
         .add_plugins(player_ui::PlayerUIPlugin) //Player UI
+        .add_plugins(player_stats::PlayerStatsPlugin) //Player UI
         .add_plugins(projectile::ProjectilePlugin)// Projectiles
         .add_plugins(enemy::EnemyPlugin)// Enemies
         //Shop

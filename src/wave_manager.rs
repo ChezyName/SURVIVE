@@ -33,16 +33,16 @@ pub fn start_wave(
     targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
     
     if wave % config::WAVE_UNIQUE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Unique, (wave / config::WAVE_UNIQUE_ENEMY_WAVE) * 3); 
+        targets.insert(EnemyType::Unique, ((wave as f32 / config::WAVE_UNIQUE_ENEMY_WAVE as f32) * 1.5) as usize); 
     }
     if wave % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Large, (wave / config::WAVE_LARGE_ENEMY_WAVE) * 2); 
+        targets.insert(EnemyType::Large,wave / config::WAVE_LARGE_ENEMY_WAVE);
     }
     if wave % config::WAVE_COLOSSAL_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Colossal, wave / config::WAVE_COLOSSAL_ENEMY_WAVE); 
+        targets.insert(EnemyType::Colossal, (wave / config::WAVE_COLOSSAL_ENEMY_WAVE / 2).min(1)); 
     }
     if wave % config::WAVE_BOSS_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Boss, wave / config::WAVE_BOSS_ENEMY_WAVE); 
+        targets.insert(EnemyType::Boss, (wave / config::WAVE_BOSS_ENEMY_WAVE / 2).min(1)); 
     }
 
     let mut queue = Vec::new();

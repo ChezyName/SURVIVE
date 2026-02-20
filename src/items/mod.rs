@@ -26,3 +26,4 @@ pub mod max_health;
 pub mod damage;
 pub mod shotgun;
 pub mod leach;
+pub mod bullet_size;

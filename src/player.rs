@@ -19,6 +19,7 @@ pub struct Player {
     pub health: f32,
     pub max_health: f32,
     pub life_steal: f32,
+    pub bullet_size: f32,
 }
 
 impl Default for Player {
@@ -33,6 +34,7 @@ impl Default for Player {
             health: config::PLAYER_MAX_HEALTH,
             max_health: config::PLAYER_MAX_HEALTH,
             life_steal: 0.0,
+            bullet_size: 100.0,
         }
     }
 }
@@ -128,9 +130,11 @@ fn player_aim_system(
     window: Single<&Window>,
     camera_query: Single<(&Camera, &GlobalTransform)>,
     mut player_query: Query<&mut Transform, With<Player>>,
+    mut time: ResMut<Time<Virtual>>,
 ) {
+    if time.is_paused() { return; }
+
     let (camera, camera_transform) = camera_query.into_inner();
-    
     for mut player_transform in &mut player_query {
         if let Some(cursor_pos) = window.cursor_position() {
             if let Ok(world_pos) = camera.viewport_to_world_2d(camera_transform, cursor_pos) {
@@ -164,9 +168,8 @@ fn player_shooting(
                     &mut commands,
                     &mut meshes,
                     &mut materials,
-                    b_transform,
-                    player.damage,
-                    player.bullet_speed,
+                    &mut player,
+                    b_transform
                 );
             }
         }

@@ -2,25 +2,25 @@ use super::{Item, ItemFactory};
 use crate::{player::Player};
 
 //adds one pellet per
-const LIFE_STEAL_PERCENT_INCREASE: f32 = 2.5;
-const COST: usize = 25;
+const BULLET_SIZE_PERCENT_INCREASE: f32 = 15.0;
+const COST: usize = 100;
 
 #[derive(Clone, Default)]
-pub struct LifeSteal;
+pub struct BulletSize;
 
-impl Item for LifeSteal {
+impl Item for BulletSize {
     fn name(&self) -> String {
-        "Life Steal".to_string()
+        "Caliber".to_string()
     }
 
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases lifesteal by {:.2}%", LIFE_STEAL_PERCENT_INCREASE)
+        format!("Increases bullet size by {:.2}%", BULLET_SIZE_PERCENT_INCREASE)
     }
 
     fn apply(&self, player: &mut Player) {
-        player.life_steal = (player.life_steal + LIFE_STEAL_PERCENT_INCREASE).clamp(0.0, 100.0);
+        player.bullet_size = player.bullet_size + BULLET_SIZE_PERCENT_INCREASE;
     }
 
     fn is_unique(&self) -> bool { false }
@@ -30,8 +30,8 @@ impl Item for LifeSteal {
     }
 
     fn can_buy(&self, player: &mut Player) -> bool {
-        return player.life_steal < 100.0
+        return true;
     }
 }
 
-inventory::submit!(ItemFactory(|| Box::new(LifeSteal::default())));
+inventory::submit!(ItemFactory(|| Box::new(BulletSize::default())));

@@ -28,13 +28,17 @@ pub fn spawn_projectile(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
-    player_transform: Transform,
-    damage: f32,
-    speed: f32,
+    player: &mut Player,
+    player_transform: Transform
 ) {
-    // 1. Calculate dynamic rectangle size (Tracer effect)
-    let width = 2.0;
-    let length = (speed / 100.0).max(6.0); 
+    //bulelt stats from player obj
+    let size = (player.bullet_size / 100.0) * 1.0;
+    let speed = player.bullet_speed;
+    let damage = player.damage;
+
+    //default shape and size
+    let width = size;
+    let length = ((speed / 100.0).max(12.0) * size) / 2.0; 
     let half_w = width / 2.0;
     let half_l = length / 2.0;
 
@@ -48,13 +52,12 @@ pub fn spawn_projectile(
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
     mesh.insert_indices(Indices::U32(indices));
 
-    // 2. Spawn with all necessary logic
     commands.spawn((
         Projectile { damage, speed },
         Lifetime(Timer::from_seconds(config::BULLET_LIFETIME, TimerMode::Once)),
         Mesh2d(meshes.add(mesh)),
         MeshMaterial2d(materials.add(Color::WHITE)),
-        player_transform, // Position and rotation inherited from player
+        player_transform,
     ));
 }
 
