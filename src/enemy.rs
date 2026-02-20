@@ -204,6 +204,8 @@ pub fn take_damage(
     enemy: &mut Enemy,
     damage: f32
 ) {
+    if enemy.health <= 0.0 { return; }
+
     let clamped_damage = damage.min(enemy.health);
     enemy.health -= damage;
 

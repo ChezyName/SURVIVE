@@ -1,7 +1,8 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
+use crate::config::format;
 
-const FIRE_RATE_INCREASE: f32 = 15.0;
+const FIRE_RATE_INCREASE: f32 = 5.0;
 const COST: usize = 80;
 
 #[derive(Clone, Default)]
@@ -15,7 +16,7 @@ impl Item for RapidFire {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases Fire Rate by {}", FIRE_RATE_INCREASE)
+        format!("Increases Fire Rate by {}", format(FIRE_RATE_INCREASE))
     }
 
     fn apply(&self, player: &mut Player) {

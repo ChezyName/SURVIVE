@@ -1,5 +1,6 @@
 use super::{Item, ItemFactory};
 use crate::{player::Player};
+use crate::config::format;
 
 //adds one pellet per
 const LIFE_STEAL_PERCENT_INCREASE: f32 = 2.5;
@@ -16,7 +17,7 @@ impl Item for LifeSteal {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases lifesteal by {:.2}%", LIFE_STEAL_PERCENT_INCREASE)
+        format!("Increases lifesteal by {}%", format(LIFE_STEAL_PERCENT_INCREASE))
     }
 
     fn apply(&self, player: &mut Player) {

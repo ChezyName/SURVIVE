@@ -1,5 +1,6 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
+use crate::config::format;
 
 const HEALTH_INCREASE: f32 = 10.0;
 const COST: usize = 100;
@@ -15,7 +16,7 @@ impl Item for MaxHealth {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases Max Health by {}", HEALTH_INCREASE)
+        format!("Increases Max Health by {}", format(HEALTH_INCREASE))
     }
 
     fn apply(&self, player: &mut Player) {

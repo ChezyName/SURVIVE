@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::player::Player;
 use crate::{AppState, GameState};
+use crate::config::format;
 
 #[derive(Component)]
 pub struct StatsPanel;
@@ -83,23 +84,14 @@ fn spawn_stats_panel(
                 TextColor(Color::srgba(0.6, 0.6, 0.6, 1.0)),
             ));
 
-            //helper func to turn 250.0 to 250 and 25.25 to 25.25 - keeps UI clean
-            let fmt = |val: f32| -> String {
-                if val.fract() == 0.0 {
-                    format!("{:.0}", val)
-                } else {
-                    format!("{:.2}", val).trim_end_matches('0').trim_end_matches('.').to_string()
-                }
-            };
-
             let stats = [
-                ("Health",       format!("{} / {}", fmt(player.health), fmt(player.max_health))),
-                ("Damage",       fmt(player.damage)),
-                ("Fire Rate",    format!("{}RPM", fmt(player.fire_rate))),
-                ("Bullet Speed", format!("{}m/s", fmt(player.bullet_speed))),
+                ("Health",       format!("{} / {}", format(player.health), format(player.max_health))),
+                ("Damage",       format(player.damage)),
+                ("Fire Rate",    format!("{}RPM", format(player.fire_rate))),
+                ("Bullet Speed", format!("{}m/s", format(player.bullet_speed))),
                 ("Pellets",      format!("{}", player.pellets)),
-                ("Spread",       format!("{}°", fmt(player.bullet_spread))),
-                ("Life Steal",   format!("{}%", fmt(player.life_steal))),
+                ("Spread",       format!("{}°", format(player.bullet_spread))),
+                ("Life Steal",   format!("{}%", format(player.life_steal))),
             ];
 
             for (label, value) in &stats {

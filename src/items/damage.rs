@@ -1,5 +1,6 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
+use crate::config::format;
 
 const DAMAGE_INCREASE: f32 = 10.0;
 const COST: usize = 50;
@@ -15,7 +16,7 @@ impl Item for Damage {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases Damage by {}", DAMAGE_INCREASE)
+        format!("Increases Damage by {}", format(DAMAGE_INCREASE))
     }
 
     fn apply(&self, player: &mut Player) {

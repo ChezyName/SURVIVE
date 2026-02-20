@@ -20,6 +20,7 @@ pub struct Player {
     pub max_health: f32,
     pub life_steal: f32,
     pub bullet_size: f32,
+    pub bullet_pierce: usize,
 }
 
 impl Default for Player {
@@ -35,6 +36,7 @@ impl Default for Player {
             max_health: config::PLAYER_MAX_HEALTH,
             life_steal: 0.0,
             bullet_size: 100.0,
+            bullet_pierce: 1, //can only hit one target before death
         }
     }
 }

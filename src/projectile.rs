@@ -10,6 +10,8 @@ use crate::enemy::Enemy;
 pub struct Projectile {
     pub damage: f32,
     pub speed: f32,
+    pub hits: usize,
+    pub max_hits: usize,
 }
 
 #[derive(Component)]
@@ -35,6 +37,8 @@ pub fn spawn_projectile(
     let size = (player.bullet_size / 100.0) * 1.0;
     let speed = player.bullet_speed;
     let damage = player.damage;
+    let max_hits = player.bullet_pierce;
+    let hits = 0;
 
     //default shape and size
     let width = size;
@@ -53,7 +57,7 @@ pub fn spawn_projectile(
     mesh.insert_indices(Indices::U32(indices));
 
     commands.spawn((
-        Projectile { damage, speed },
+        Projectile { damage, speed, hits, max_hits },
         Lifetime(Timer::from_seconds(config::BULLET_LIFETIME, TimerMode::Once)),
         Mesh2d(meshes.add(mesh)),
         MeshMaterial2d(materials.add(Color::WHITE)),
@@ -79,17 +83,20 @@ fn projectile_lifetime(time: Res<Time>, mut commands: Commands, mut query: Query
 
 fn projectile_collision(
     mut commands: Commands,
-    projectile_query: Query<(Entity, &Transform, &Projectile)>,
+    mut projectile_query: Query<(Entity, &Transform, &mut Projectile)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
     mut player_query: Query<&mut Player>,
     mut game_state: ResMut<GameState>,
 ) {
     if let Ok(mut player) = player_query.single_mut() {
-        for (projectile_entity, projectile_transform, projectile) in &projectile_query {
+        for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
             for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
                 let distance = projectile_transform.translation.distance(enemy_transform.translation);
                 if distance < (config::BULLET_HIT_BOX + enemy_comp.size) {
-                    commands.entity(projectile_entity).despawn();
+                    projectile.hits += 1;
+                    if projectile.hits >= projectile.max_hits {
+                        commands.entity(projectile_entity).despawn();
+                    }
 
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, projectile.damage);
                     break;
