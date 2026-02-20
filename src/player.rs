@@ -18,6 +18,7 @@ pub struct Player {
     pub bullet_spread: f32,
     pub health: f32,
     pub max_health: f32,
+    pub life_steal: f32,
 }
 
 impl Default for Player {
@@ -31,6 +32,7 @@ impl Default for Player {
             bullet_spread: 0.0,
             health: config::PLAYER_MAX_HEALTH,
             max_health: config::PLAYER_MAX_HEALTH,
+            life_steal: 0.0,
         }
     }
 }

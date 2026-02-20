@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config;
 
 const FIRE_RATE_INCREASE: f32 = 15.0;
 const COST: usize = 80;

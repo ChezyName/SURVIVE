@@ -50,7 +50,7 @@ impl Plugin for EnemyPlugin {
 fn enemy_ai_system(
     time: Res<Time>,
     player_query: Query<&Transform, With<Player>>,
-   mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
+    mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
 ) {
     if let Ok(player_transform) = player_query.single() {
         let seconds = time.elapsed_secs();
@@ -199,14 +199,20 @@ pub fn spawn_enemy(
 pub fn take_damage(
     commands: &mut Commands,
     game_state: &mut GameState,
+    player: &mut Player,
     entity: Entity,
     enemy: &mut Enemy,
     damage: f32
 ) {
+    let clamped_damage = damage.min(enemy.health);
     enemy.health -= damage;
 
     if enemy.health <= 0.0 {
         commands.entity(entity).despawn();
         game_state.money += enemy.price_tag * 5000;
+        if player.life_steal > 0.0 {
+            player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)
+        }
+        
     }
 }

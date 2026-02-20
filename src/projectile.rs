@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
+use crate::player::Player;
 use crate::{config, enemy, GameState};
 use crate::enemy::Enemy;
 
@@ -77,16 +78,19 @@ fn projectile_collision(
     mut commands: Commands,
     projectile_query: Query<(Entity, &Transform, &Projectile)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
+    mut player_query: Query<&mut Player>,
     mut game_state: ResMut<GameState>,
 ) {
-    for (projectile_entity, projectile_transform, projectile) in &projectile_query {
-        for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
-            let distance = projectile_transform.translation.distance(enemy_transform.translation);
-            if distance < (config::BULLET_HIT_BOX + enemy_comp.size) {
-                commands.entity(projectile_entity).despawn();
+    if let Ok(mut player) = player_query.single_mut() {
+        for (projectile_entity, projectile_transform, projectile) in &projectile_query {
+            for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
+                let distance = projectile_transform.translation.distance(enemy_transform.translation);
+                if distance < (config::BULLET_HIT_BOX + enemy_comp.size) {
+                    commands.entity(projectile_entity).despawn();
 
-                enemy::take_damage(&mut commands, &mut *game_state, enemy_entity, &mut enemy_comp, projectile.damage);
-                break;
+                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, projectile.damage);
+                    break;
+                }
             }
         }
     }

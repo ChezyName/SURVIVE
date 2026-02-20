@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config;
 
 const DAMAGE_INCREASE: f32 = 10.0;
 const COST: usize = 50;
