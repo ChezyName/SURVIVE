@@ -22,6 +22,9 @@ pub struct MoneyText;
 #[derive(Component)]
 pub struct CardTitleText(pub String);
 
+#[derive(Component)]
+pub struct DisabledButton;
+
 pub struct ShopPlugin;
 
 impl Plugin for ShopPlugin {
@@ -39,19 +42,30 @@ pub fn spawn_shop(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     game_state: Res<GameState>,
+    mut player_query: Query<&mut Player>,
 ) {
     let font: Handle<Font> = asset_server.load("fonts/FiraCode-SemiBold.ttf");
     let mut rng = rand::rng();
+    let mut player = player_query.single_mut().ok();
 
     let available: Vec<fn() -> Box<dyn Item>> = inventory::iter::<ItemFactory>()
         .map(|f| f.0)
         .filter(|factory| {
             let item = factory();
-            if item.is_unique() {
+
+            let unique_check = if item.is_unique() {
                 !game_state.has_item(item.name().as_str())
             } else {
                 true
-            }
+            };
+
+            let can_buy = if let Some(ref mut p) = player {
+                item.can_buy(&mut *p)
+            } else {
+                false
+            };
+
+            unique_check && can_buy
         })
         .collect();
 
@@ -106,7 +120,9 @@ pub fn spawn_shop(
                 if has_items {
                     for item in chosen {
                         let count = game_state.item_count(item.name().as_str());
-                        spawn_item_card(area, &font, item, count);
+                        if let Some(ref mut p) = player {
+                            spawn_item_card(area, &font, item, count, &mut *p, &game_state);
+                        }
                     }
                 } else {
                     area.spawn((
@@ -144,9 +160,21 @@ fn spawn_item_card(
     font: &Handle<Font>,
     item: Box<dyn Item>,
     owned_count: usize,
+    player: &mut Player,
+    game_state: &GameState,
 ) {
     let item_name = item.name();
     let is_unique = item.is_unique();
+
+    let already_owned_unique = is_unique && game_state.has_item(item_name.as_str());
+    let can_afford = item.can_buy(player);
+    let disabled = already_owned_unique || !can_afford;
+
+    let card_color = if disabled {
+        Color::srgba(0.08, 0.08, 0.08, 1.0)
+    } else {
+        Color::srgba(0.15, 0.15, 0.15, 1.0)
+    };
 
     let title = if !is_unique && owned_count > 0 {
         format!("{} x{}", item_name, owned_count)
@@ -154,50 +182,65 @@ fn spawn_item_card(
         item_name.clone()
     };
 
-    parent
-        .spawn((
-            Button,
-            Node {
-                width: Val::Px(250.0),
-                height: Val::Px(350.0),
-                flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Val::Px(20.0)),
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(Color::srgba(0.15, 0.15, 0.15, 1.0)),
-            PurchaseButton(item.clone_box()),
-        ))
-        .with_children(|card: &mut RelatedSpawnerCommands<ChildOf>| {
-            if is_unique {
-                card.spawn((
-                    Text::new(title),
-                    TextFont { font: font.clone(), font_size: 24.0, ..default() },
-                    TextColor(Color::WHITE),
-                ));
-            } else {
-                card.spawn((
-                    Text::new(title),
-                    TextFont { font: font.clone(), font_size: 24.0, ..default() },
-                    TextColor(Color::WHITE),
-                    CardTitleText(item_name.clone()),
-                ));
-            }
+    let mut card = parent.spawn((
+        Button,
+        Node {
+            width: Val::Px(250.0),
+            height: Val::Px(350.0),
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(Val::Px(20.0)),
+            justify_content: JustifyContent::SpaceBetween,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        BackgroundColor(card_color),
+        PurchaseButton(item.clone_box()),
+    ));
 
-            card.spawn((
-                Text::new(item.description()),
-                TextFont { font: font.clone(), font_size: 14.0, ..default() },
-                TextColor(Color::srgba(0.7, 0.7, 0.7, 1.0)),
-            ));
+    if disabled {
+        card.insert(DisabledButton);
+    }
 
-            // Cost
+    card.with_children(|card: &mut RelatedSpawnerCommands<ChildOf>| {
+        let text_color = if disabled {
+            TextColor(Color::srgba(0.4, 0.4, 0.4, 1.0))
+        } else {
+            TextColor(Color::WHITE)
+        };
+
+        if is_unique {
             card.spawn((
-                Text::new(format!("${}", item.cost())),
-                TextFont { font: font.clone(), font_size: 22.0, ..default() },
-                TextColor(Color::srgba(1.0, 0.84, 0.0, 1.0)),
+                Text::new(title),
+                TextFont { font: font.clone(), font_size: 24.0, ..default() },
+                text_color,
             ));
-        });
+        } else {
+            card.spawn((
+                Text::new(title),
+                TextFont { font: font.clone(), font_size: 24.0, ..default() },
+                text_color,
+                CardTitleText(item_name.clone()),
+            ));
+        }
+
+        card.spawn((
+            Text::new(item.description()),
+            TextFont { font: font.clone(), font_size: 14.0, ..default() },
+            TextColor(Color::srgba(0.7, 0.7, 0.7, 1.0)),
+        ));
+
+        let cost_color = if disabled {
+            Color::srgba(0.5, 0.42, 0.0, 1.0)
+        } else {
+            Color::srgba(1.0, 0.84, 0.0, 1.0)
+        };
+
+        card.spawn((
+            Text::new(format!("${}", item.cost())),
+            TextFont { font: font.clone(), font_size: 22.0, ..default() },
+            TextColor(cost_color),
+        ));
+    });
 }
 
 pub fn shop_interaction(

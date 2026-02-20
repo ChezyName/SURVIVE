@@ -2,7 +2,7 @@ use super::{Item, ItemFactory};
 use crate::player::Player;
 
 const HEALTH_INCREASE: f32 = 10.0;
-const COST: usize = 15;
+const COST: usize = 100;
 
 #[derive(Clone, Default)]
 pub struct MaxHealth;
@@ -28,6 +28,8 @@ impl Item for MaxHealth {
     fn clone_box(&self) -> Box<dyn Item> {
         Box::new(self.clone())
     }
+
+    fn can_buy(&self, player: &mut Player) -> bool { return true; }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(MaxHealth::default())));

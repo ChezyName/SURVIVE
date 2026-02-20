@@ -207,6 +207,6 @@ pub fn take_damage(
 
     if enemy.health <= 0.0 {
         commands.entity(entity).despawn();
-        game_state.money += enemy.price_tag;
+        game_state.money += enemy.price_tag * 5000;
     }
 }

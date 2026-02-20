@@ -28,7 +28,7 @@ impl Item for Shotgun {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        let current_lvl = self.level.fetch_add(1, Ordering::Relaxed);
+        let current_lvl = self.level.load(Ordering::Relaxed);
         format!("Adds Pellet but reduces accuracy by {:.2}", config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (current_lvl as f32/MAX_LEVEL as f32).clamp(0.0, 1.0)))
     }
 
@@ -42,6 +42,11 @@ impl Item for Shotgun {
 
     fn clone_box(&self) -> Box<dyn Item> {
         Box::new(self.clone())
+    }
+
+    fn can_buy(&self, player: &mut Player) -> bool {
+        let current_lvl = self.level.load(Ordering::Relaxed);
+        return current_lvl <= MAX_LEVEL
     }
 }
 

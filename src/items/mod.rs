@@ -8,6 +8,7 @@ pub trait Item: Send + Sync {
     fn apply(&self, player: &mut Player);
     fn clone_box(&self) -> Box<dyn Item>;
     fn is_unique(&self) -> bool; //if this item can only be obtained once
+    fn can_buy(&self, player: &mut Player) -> bool; //if this item can be bought as of right now
 }
 
 impl Clone for Box<dyn Item> {

@@ -33,10 +33,10 @@ pub fn start_wave(
     targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
     
     if wave % config::WAVE_UNIQUE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Unique, wave / config::WAVE_UNIQUE_ENEMY_WAVE); 
+        targets.insert(EnemyType::Unique, (wave / config::WAVE_UNIQUE_ENEMY_WAVE) * 3); 
     }
     if wave % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Large, wave / config::WAVE_LARGE_ENEMY_WAVE); 
+        targets.insert(EnemyType::Large, (wave / config::WAVE_LARGE_ENEMY_WAVE) * 2); 
     }
     if wave % config::WAVE_COLOSSAL_ENEMY_WAVE == 0 { 
         targets.insert(EnemyType::Colossal, wave / config::WAVE_COLOSSAL_ENEMY_WAVE); 

@@ -3,7 +3,7 @@ use crate::player::Player;
 use crate::config;
 
 const DAMAGE_INCREASE: f32 = 10.0;
-const COST: usize = 15;
+const COST: usize = 50;
 
 #[derive(Clone, Default)]
 pub struct Damage;
@@ -28,6 +28,8 @@ impl Item for Damage {
     fn clone_box(&self) -> Box<dyn Item> {
         Box::new(self.clone())
     }
+
+    fn can_buy(&self, player: &mut Player) -> bool { return true; }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Damage::default())));

@@ -3,7 +3,7 @@ use crate::player::Player;
 use crate::config;
 
 const FIRE_RATE_INCREASE: f32 = 15.0;
-const COST: usize = 25;
+const COST: usize = 80;
 
 #[derive(Clone, Default)]
 pub struct RapidFire;
@@ -30,6 +30,8 @@ impl Item for RapidFire {
     fn clone_box(&self) -> Box<dyn Item> {
         Box::new(self.clone())
     }
+
+    fn can_buy(&self, player: &mut Player) -> bool { return true; }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(RapidFire::default())));
