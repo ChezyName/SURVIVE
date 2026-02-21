@@ -6,6 +6,7 @@ pub struct GameState {
     pub round: usize,
     pub money: usize,
     pub item_counts: HashMap<String, usize>,
+    pub rerolls: usize,
 }
 
 impl GameState {

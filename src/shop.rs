@@ -5,7 +5,7 @@ use rand::seq::IteratorRandom;
 
 use crate::items::{Item, ItemFactory};
 use crate::player::Player;
-use crate::{AppState, GameState};
+use crate::{AppState, GameState, config};
 
 #[derive(Component)]
 pub struct ShopMenu;
@@ -15,6 +15,8 @@ pub struct PurchaseButton(pub Box<dyn Item>);
 
 #[derive(Component)]
 pub struct SkipButton;
+#[derive(Component)]
+pub struct RerollButton;
 
 #[derive(Component)]
 pub struct MoneyText;
@@ -32,7 +34,7 @@ impl Plugin for ShopPlugin {
         app.add_systems(OnEnter(AppState::Shop), spawn_shop)
             .add_systems(
                 Update,
-                (shop_interaction, skip_interaction).run_if(in_state(AppState::Shop)),
+                (shop_interaction, skip_interaction, reroll_interaction).run_if(in_state(AppState::Shop)),
             )
             .add_systems(OnExit(AppState::Shop), despawn_shop);
     }
@@ -134,23 +136,57 @@ pub fn spawn_shop(
                 }
             });
 
-            root.spawn((
-                Button,
-                Node {
-                    padding: UiRect::axes(Val::Px(40.0), Val::Px(14.0)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 1.0)),
-                SkipButton,
-            ))
-            .with_children(|btn: &mut RelatedSpawnerCommands<ChildOf>| {
-                btn.spawn((
-                    Text::new("Leave Shop"),
-                    TextFont { font: font.clone(), font_size: 20.0, ..default() },
-                    TextColor(Color::WHITE),
-                ));
+            root.spawn(Node {
+                flex_direction: FlexDirection::Row,
+                column_gap: Val::Px(12.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            })
+            .with_children(|row: &mut RelatedSpawnerCommands<ChildOf>| {
+                // Reroll button
+                row.spawn((
+                    Button,
+                    Node {
+                        padding: UiRect::axes(Val::Px(40.0), Val::Px(14.0)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 1.0)),
+                    RerollButton,
+                ))
+                .with_children(|btn: &mut RelatedSpawnerCommands<ChildOf>| {
+                    btn.spawn((
+                        Text::new(if game_state.rerolls == 0 {
+                            "Reroll Shop [FREE]".to_string()
+                        } else {
+                            format!("Reroll Shop [${}]", config::format(game_state.rerolls as f32 * config::REROLL_COST_PER_REROLL as f32))
+                        }),
+                        TextFont { font: font.clone(), font_size: 20.0, ..default() },
+                        TextColor(Color::srgba(1.0, 0.84, 0.0, 1.0)),
+                    ));
+                });
+
+                // Leave button
+                row.spawn((
+                    Button,
+                    Node {
+                        padding: UiRect::axes(Val::Px(40.0), Val::Px(14.0)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.2, 0.2, 0.2, 1.0)),
+                    SkipButton,
+                ))
+                .with_children(|btn: &mut RelatedSpawnerCommands<ChildOf>| {
+                    btn.spawn((
+                        Text::new("Leave Shop"),
+                        TextFont { font: font.clone(), font_size: 20.0, ..default() },
+                        TextColor(Color::WHITE),
+                    ));
+                });
             });
         });
 }
@@ -282,6 +318,23 @@ pub fn shop_interaction(
             }
             Interaction::Hovered => bg_color.0 = Color::srgba(0.28, 0.28, 0.28, 1.0),
             Interaction::None    => bg_color.0 = Color::srgba(0.15, 0.15, 0.15, 1.0),
+        }
+    }
+}
+
+pub fn reroll_interaction(
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<RerollButton>)>,
+    mut next_state: ResMut<NextState<AppState>>,
+    mut game_state: ResMut<GameState>,
+) {
+    for interaction in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            let cost = game_state.rerolls * config::REROLL_COST_PER_REROLL;
+            if game_state.money >= cost {
+                game_state.money -= cost;
+                game_state.rerolls += 1;
+                next_state.set(AppState::Shop);
+            }
         }
     }
 }
