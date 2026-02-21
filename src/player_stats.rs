@@ -12,7 +12,7 @@ impl Plugin for PlayerStatsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver))),
+            toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::GameOver)))),
         );
     }
 }

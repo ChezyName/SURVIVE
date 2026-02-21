@@ -20,7 +20,7 @@ pub const BULLET_DAMAGE: f32 = 15.0;
 pub const BULLET_HIT_BOX: f32 = 2.0; 
 
 //Basic Enemy Stuff, Multiplies Later
-pub const ENEMY_SPAWN_DIST: f32 = 800.0;
+pub const ENEMY_SPAWN_DIST: [f32;2] = [500.0, 1500.0]; //range in m
 pub const ENEMY_SWITCH_TIME_RANGE: [f32; 2] = [150.0, 1500.0]; //time range in ms
 
 //Wave Spawning

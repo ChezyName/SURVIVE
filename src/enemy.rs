@@ -20,6 +20,7 @@ pub struct Enemy {
     pub rand_bool: bool,
     pub switch_timer: Timer,
     pub switch_time_range: [f32; 2],
+    pub start_dist: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -79,7 +80,7 @@ fn enemy_ai_system(
 
                 MovementType::Circular => {
                     let distance = enemy_transform.translation.distance(player_transform.translation);
-                    let t = (distance / config::ENEMY_SPAWN_DIST).clamp(0.0, 1.0);
+                    let t = (distance / enemy_stats.start_dist).clamp(0.0, 1.0);
                     let curve_strength = config::lerp(0.5, 1.0, t); 
 
                     let offset_angle = seconds.sin() * curve_strength;
@@ -136,7 +137,7 @@ pub fn spawn_enemy(
     let enemy_data = enemy_type.get_config();
     let sides = enemy_data.sides.max(3); //polygons are 3 sides min
 
-    let spawn_distance = config::ENEMY_SPAWN_DIST;
+    let spawn_distance = rand::random_range(config::ENEMY_SPAWN_DIST[0]..config::ENEMY_SPAWN_DIST[1]);
     let radians = angle_degrees.to_radians();
     let x = spawn_distance * radians.cos();
     let y = spawn_distance * radians.sin();
@@ -192,6 +193,7 @@ pub fn spawn_enemy(
             switch_timer: Timer::from_seconds(config::lerp(config::ENEMY_SWITCH_TIME_RANGE[0], config::ENEMY_SWITCH_TIME_RANGE[1], rand::random_range(0.0..1.0)), TimerMode::Repeating),
             switch_time_range: config::ENEMY_SWITCH_TIME_RANGE,
             rand_bool: rand::random_bool(0.5),
+            start_dist: spawn_distance,
         },
     ));
 }
