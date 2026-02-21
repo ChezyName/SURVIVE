@@ -21,6 +21,7 @@ pub struct Enemy {
     pub switch_timer: Timer,
     pub switch_time_range: [f32; 2],
     pub start_dist: f32,
+    pub self_type: EnemyType,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -194,6 +195,7 @@ pub fn spawn_enemy(
             switch_time_range: config::ENEMY_SWITCH_TIME_RANGE,
             rand_bool: rand::random_bool(0.5),
             start_dist: spawn_distance,
+            self_type: enemy_type,
         },
     ));
 }
@@ -213,6 +215,8 @@ pub fn take_damage(
 
     if enemy.health <= 0.0 {
         commands.entity(entity).despawn();
+        game_state.total_enemies_killed += 1;
+        *game_state.enemies_killed.entry(enemy.self_type).or_insert(0) += 1;
         game_state.money += enemy.price_tag * 5000;
         if player.life_steal > 0.0 {
             player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)

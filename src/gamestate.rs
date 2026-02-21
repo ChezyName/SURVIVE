@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
+use crate::enemy::EnemyType;
 
 #[derive(Resource, Default)]
 pub struct GameState {
@@ -7,6 +8,32 @@ pub struct GameState {
     pub money: usize,
     pub item_counts: HashMap<String, usize>,
     pub rerolls: usize,
+    pub total_enemies_killed: usize,
+    pub enemies_killed: HashMap<EnemyType, usize>,
+    pub playtime_secs: f32,
+}
+
+pub fn update_playtime(
+    mut game_state: ResMut<GameState>,
+    time: Res<Time<Real>>,
+) {
+    game_state.playtime_secs += time.delta_secs();
+}
+
+//turns playtime into d h m s
+pub fn fmt_playtime(secs: f32) -> String {
+    let total = secs as u64;
+    let s = total % 60;
+    let m = (total / 60) % 60;
+    let h = (total / 3600) % 24;
+    let d = total / 86400;
+
+    match (d, h, m) {
+        (0, 0, 0) => format!("{}s", s),
+        (0, 0, _) => format!("{}m {}s", m, s),
+        (0, _, _) => format!("{}h {}m {}s", h, m, s),
+        (_, _, _) => format!("{}d {}h {}m {}s", d, h, m, s),
+    }
 }
 
 impl GameState {

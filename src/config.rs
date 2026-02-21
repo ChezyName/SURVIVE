@@ -106,6 +106,16 @@ impl EnemyType {
             },
         }
     }
+
+    pub fn name(&self) -> &str {
+        match self {
+            EnemyType::Normal   => "Normal",
+            EnemyType::Unique   => "Unique",
+            EnemyType::Large    => "Large",
+            EnemyType::Colossal => "Colossal",
+            EnemyType::Boss     => "Boss",
+        }
+    }
 }
 
 //helper func to turn 250.0 to 250 and 25.25 to 25.25 - keeps UI clean

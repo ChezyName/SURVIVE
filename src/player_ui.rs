@@ -157,35 +157,29 @@ fn update_player_ui(
         text.0 = format!("[Wave {} | ${}]", game_state.round, format_currency(game_state.money));
     }
 
-    // Update Game Status Text
     if let Ok(mut text) = enemies_query.single_mut() {
-        //If Fighting Mode / Enemies are Alive
         let enemy_count = wave_state.enemies_remaining;
         if enemy_count == 1 { text.0 = format!("1 Enemy Remaining"); }
         else if enemy_count <= 0 { text.0 = format!("No Enemy Remaining"); }
         else { text.0 = format!("{} Enemies Remaining", enemy_count); }
     }
 
-    // 1 pip per 10 HP (Change this to adjust granularity)
     let total_capacity = (player.max_health / config::UI_HEALTH_DIV).ceil() as usize; 
     let filled_count = (player.health / config::UI_HEALTH_DIV).ceil() as usize;
 
     for (segment, mut vis, mut color, mut node) in segment_query.iter_mut() {
         if segment.0 < total_capacity {
             *vis = Visibility::Visible;
-            
-            // Flex logic: only visible pips get flex_grow
             node.flex_grow = 1.0; 
             node.display = Display::Flex;
 
             if segment.0 < filled_count {
                 color.0 = Color::WHITE; 
             } else {
-                color.0 = Color::srgba(1.0, 1.0, 1.0, 0.1); // Empty "ghost" pips
+                color.0 = Color::srgba(1.0, 1.0, 1.0, 0.1);
             }
         } else {
             *vis = Visibility::Hidden;
-            // Crucial: remove from layout so they don't take up space
             node.flex_grow = 0.0;
             node.display = Display::None; 
         }

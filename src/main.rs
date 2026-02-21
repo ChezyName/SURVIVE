@@ -32,7 +32,7 @@ fn main() {
         //Gameplay
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave)
-        .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end).chain().run_if(in_state(AppState::InGame)))
+        .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end, gamestate::update_playtime).chain().run_if(in_state(AppState::InGame)))
         .add_plugins(player::PlayerPlugin)// Player
         .add_plugins(player_ui::PlayerUIPlugin) //Player UI
         .add_plugins(player_stats::PlayerStatsPlugin) //Player UI

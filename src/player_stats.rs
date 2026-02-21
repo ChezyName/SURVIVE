@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use crate::player::Player;
-use crate::{AppState, GameState};
+use crate::{AppState, GameState, gamestate};
 use crate::config::format;
+use crate::enemy::EnemyType;
 
 #[derive(Component)]
 pub struct StatsPanel;
@@ -12,7 +13,7 @@ impl Plugin for PlayerStatsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::GameOver)))),
+            toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::Shop)))),
         );
     }
 }
@@ -52,28 +53,6 @@ fn spawn_stats_panel(
     player: &Player,
     game_state: &GameState,
 ) {
-    //Paused Text
-    commands.spawn((
-        Node {
-            position_type: PositionType::Absolute,
-            width: Val::Percent(100.0),
-            height: Val::Percent(100.0),
-            padding: UiRect::percent(0.0, 0.0, 15.0, 0.0),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Start,
-            ..default()
-        },
-        StatsPanel,
-        GlobalZIndex(99),
-    ))
-    .with_children(|root| {
-        root.spawn((
-            Text::new("PAUSED"),
-            TextFont { font: font.clone(), font_size: 48.0, ..default() },
-            TextColor(Color::srgba(1.0, 1.0, 1.0, 0.08)),
-        ));
-    });
-
     commands
         .spawn((
             Node {
@@ -93,18 +72,25 @@ fn spawn_stats_panel(
         ))
         .with_children(|root| {
             root.spawn((
-                Text::new("PLAYER STATS"),
+                Text::new("GAME PAUSED"),
                 TextFont { font: font.clone(), font_size: 22.0, ..default() },
                 TextColor(Color::srgba(1.0, 1.0, 0.0, 1.0)),
             ));
 
             spawn_divider(root);
 
-            root.spawn((
-                Text::new("— STATS —"),
-                TextFont { font: font.clone(), font_size: 13.0, ..default() },
-                TextColor(Color::srgba(0.6, 0.6, 0.6, 1.0)),
-            ));
+            spawn_stat_row(root, font, "Time Alive", &gamestate::fmt_playtime(game_state.playtime_secs));
+
+            let order = [EnemyType::Normal, EnemyType::Unique, EnemyType::Large, EnemyType::Colossal, EnemyType::Boss];
+            for enemy_type in &order {
+                if let Some(count) = game_state.enemies_killed.get(enemy_type) {
+                    spawn_stat_row(root, font, &format!("{} Enemies Killed", enemy_type.name()), &format(*count as f32));
+                }
+            }
+
+            spawn_stat_row(root, font, "Total Enemies Killed", &format(game_state.total_enemies_killed as f32));
+
+            spawn_divider(root);
 
             let stats = [
                 ("Health",       format!("{} / {}", format(player.health), format(player.max_health))),
@@ -121,12 +107,6 @@ fn spawn_stats_panel(
             }
 
             spawn_divider(root);
-
-            root.spawn((
-                Text::new("— ITEMS —"),
-                TextFont { font: font.clone(), font_size: 13.0, ..default() },
-                TextColor(Color::srgba(0.6, 0.6, 0.6, 1.0)),
-            ));
 
             if game_state.item_counts.is_empty() {
                 root.spawn((
