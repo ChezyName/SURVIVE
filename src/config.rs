@@ -106,6 +106,7 @@ impl EnemyType {
 }
 
 //helper func to turn 250.0 to 250 and 25.25 to 25.25 - keeps UI clean
+//rounds to 2 decimals max
 pub fn format(val: f32) -> String {
-    format!("{:.8}", val).trim_end_matches('0').trim_end_matches('.').to_string()
+    format!("{:.2}", val).trim_end_matches('0').trim_end_matches('.').to_string()
 }

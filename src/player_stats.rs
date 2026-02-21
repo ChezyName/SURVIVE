@@ -52,6 +52,28 @@ fn spawn_stats_panel(
     player: &Player,
     game_state: &GameState,
 ) {
+    //Paused Text
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            padding: UiRect::percent(0.0, 0.0, 15.0, 0.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Start,
+            ..default()
+        },
+        StatsPanel,
+        GlobalZIndex(99),
+    ))
+    .with_children(|root| {
+        root.spawn((
+            Text::new("PAUSED"),
+            TextFont { font: font.clone(), font_size: 48.0, ..default() },
+            TextColor(Color::srgba(1.0, 1.0, 1.0, 0.08)),
+        ));
+    });
+
     commands
         .spawn((
             Node {

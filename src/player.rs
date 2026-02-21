@@ -163,19 +163,33 @@ fn player_shooting(
 
             for i in 0..player.pellets {
                 let mut b_transform = *transform;
-                if player.bullet_spread > 0.0 {
-                    b_transform.rotate_z(rand::random_range(-player.bullet_spread..player.bullet_spread).to_radians());
+                let spread = player.bullet_spread;
+
+                let angle = if player.pellets <= 1 {
+                    if spread > 0.0 {
+                        rand::random_range(-spread..spread)
+                    } else {
+                        0.0
+                    }
+                } else {
+                    let t = i as f32 / (player.pellets - 1) as f32;
+                    -spread + t * (spread * 2.0)
+                };
+
+                if spread > 0.0 {
+                    b_transform.rotate_z(angle.to_radians());
                 }
+
                 projectile::spawn_projectile(
                     &mut commands,
                     &mut meshes,
                     &mut materials,
-                    &mut player,
+                    &mut *player,
                     b_transform
                 );
             }
         }
-    } else {info!("Error finding Player")}
+    }
 }
 
 pub fn take_damage(

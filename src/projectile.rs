@@ -12,6 +12,8 @@ pub struct Projectile {
     pub speed: f32,
     pub hits: usize,
     pub max_hits: usize,
+    pub half_w: f32,
+    pub half_l: f32,
 }
 
 #[derive(Component)]
@@ -57,7 +59,7 @@ pub fn spawn_projectile(
     mesh.insert_indices(Indices::U32(indices));
 
     commands.spawn((
-        Projectile { damage, speed, hits, max_hits },
+        Projectile { damage, speed, hits, max_hits, half_w, half_l },
         Lifetime(Timer::from_seconds(config::BULLET_LIFETIME, TimerMode::Once)),
         Mesh2d(meshes.add(mesh)),
         MeshMaterial2d(materials.add(Color::WHITE)),
@@ -81,6 +83,37 @@ fn projectile_lifetime(time: Res<Time>, mut commands: Commands, mut query: Query
     }
 }
 
+fn rect_circle_intersect(
+    rect_transform: &Transform,
+    half_w: f32,
+    half_l: f32,
+    circle_pos: Vec2,
+    circle_radius: f32,
+) -> bool {
+    // transform circle center into the rectangle's local space
+    let rect_pos = rect_transform.translation.truncate();
+    let rect_angle = rect_transform.rotation.to_euler(EulerRot::XYZ).2;
+
+    let cos = rect_angle.cos();
+    let sin = rect_angle.sin();
+
+    let delta = circle_pos - rect_pos;
+
+    // rotate delta into rect local space
+    let local_x = delta.x * cos + delta.y * sin;
+    let local_y = -delta.x * sin + delta.y * cos;
+
+    // clamp to nearest point on rect
+    let clamped_x = local_x.clamp(-half_w, half_w);
+    let clamped_y = local_y.clamp(-half_l, half_l);
+
+    // distance from circle center to nearest point on rect
+    let dist_x = local_x - clamped_x;
+    let dist_y = local_y - clamped_y;
+
+    (dist_x * dist_x + dist_y * dist_y) < (circle_radius * circle_radius)
+}
+
 fn projectile_collision(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Transform, &mut Projectile)>,
@@ -91,8 +124,15 @@ fn projectile_collision(
     if let Ok(mut player) = player_query.single_mut() {
         for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
             for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
-                let distance = projectile_transform.translation.distance(enemy_transform.translation);
-                if distance < (config::BULLET_HIT_BOX + enemy_comp.size) {
+                let enemy_pos = enemy_transform.translation.truncate();
+
+                if rect_circle_intersect(
+                    projectile_transform,
+                    projectile.half_w,
+                    projectile.half_l,
+                    enemy_pos,
+                    enemy_comp.size,
+                ) {
                     projectile.hits += 1;
                     if projectile.hits >= projectile.max_hits {
                         commands.entity(projectile_entity).despawn();
