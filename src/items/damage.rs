@@ -10,7 +10,7 @@ pub struct Damage;
 
 impl Item for Damage {
     fn name(&self) -> String {
-        "Damage".to_string()
+        "Sharpness".to_string()
     }
 
     fn cost(&self) -> usize { COST }

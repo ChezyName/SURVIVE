@@ -11,7 +11,7 @@ pub struct LifeSteal;
 
 impl Item for LifeSteal {
     fn name(&self) -> String {
-        "Life Steal".to_string()
+        "Vamperism".to_string()
     }
 
     fn cost(&self) -> usize { COST }

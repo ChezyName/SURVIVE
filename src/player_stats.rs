@@ -99,6 +99,8 @@ fn spawn_stats_panel(
                 ("Bullet Speed", format!("{}m/s", format(player.bullet_speed))),
                 ("Pellets",      format!("{}", player.pellets)),
                 ("Spread",       format!("{}°", format(player.bullet_spread))),
+                ("Penetration",   format!("{}", format(player.bullet_pierce as f32))),
+                ("Bullet Size",   format!("{}%", format(player.bullet_size))),
                 ("Life Steal",   format!("{}%", format(player.life_steal))),
             ];
 

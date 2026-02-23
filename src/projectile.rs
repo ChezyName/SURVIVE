@@ -138,7 +138,11 @@ fn projectile_collision(
                         commands.entity(projectile_entity).despawn();
                     }
 
-                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, projectile.damage);
+                    let mut damage = projectile.damage;
+                    if(player.crit_percent > 0.0 && rand::random_bool((player.crit_percent / 100.0).clamp(0.0, 1.0) as f64)) {
+                        damage += damage * 0.75;
+                    }
+                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage);
                     break;
                 }
             }
