@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::picking::hover::HoverMap;
 use crate::player::Player;
 use crate::{AppState, GameState, gamestate};
 use crate::config::format;
@@ -7,6 +9,16 @@ use crate::enemy::EnemyType;
 #[derive(Component)]
 pub struct StatsPanel;
 
+#[derive(Component)]
+pub struct ScrollArea;
+
+#[derive(EntityEvent, Debug)]
+#[entity_event(propagate, auto_propagate)]
+struct Scroll {
+    entity: Entity,
+    delta: Vec2,
+}
+
 pub struct PlayerStatsPlugin;
 
 impl Plugin for PlayerStatsPlugin {
@@ -14,7 +26,7 @@ impl Plugin for PlayerStatsPlugin {
         app.add_systems(
             Update,
             toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::Shop)))),
-        );
+        ).add_systems(Update, send_scroll_events).add_observer(on_scroll_handler);
     }
 }
 
@@ -79,53 +91,66 @@ fn spawn_stats_panel(
 
             spawn_divider(root);
 
-            spawn_stat_row(root, font, "Time Alive", &gamestate::fmt_playtime(game_state.playtime_secs));
+            // Scrollable container
+            root.spawn((
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    flex_grow: 1.0,
+                    overflow: Overflow::scroll_y(),
+                    row_gap: Val::Px(6.0),
+                    ..default()
+                },
+                ScrollArea,
+            ))
+            .with_children(|scroll| {
+                spawn_stat_row(scroll, font, "Time Alive", &gamestate::fmt_playtime(game_state.playtime_secs));
 
-            let order = [EnemyType::Normal, EnemyType::Unique, EnemyType::Large, EnemyType::Colossal, EnemyType::Boss];
-            for enemy_type in &order {
-                if let Some(count) = game_state.enemies_killed.get(enemy_type) {
-                    spawn_stat_row(root, font, &format!("{} Enemies Killed", enemy_type.name()), &format(*count as f32));
+                let order = [EnemyType::Normal, EnemyType::Unique, EnemyType::Large, EnemyType::Colossal, EnemyType::Boss];
+                for enemy_type in &order {
+                    if let Some(count) = game_state.enemies_killed.get(enemy_type) {
+                        spawn_stat_row(scroll, font, &format!("{} Enemies Killed", enemy_type.name()), &format(*count as f32));
+                    }
                 }
-            }
 
-            spawn_stat_row(root, font, "Total Enemies Killed", &format(game_state.total_enemies_killed as f32));
+                spawn_stat_row(scroll, font, "Total Enemies Killed", &format(game_state.total_enemies_killed as f32));
 
-            spawn_divider(root);
+                spawn_divider(scroll);
 
-            let stats = [
-                ("Health",       format!("{} / {}", format(player.health), format(player.max_health))),
-                ("Damage",       format(player.damage)),
-                ("Fire Rate",    format!("{}RPM", format(player.fire_rate))),
-                ("Bullet Speed", format!("{}m/s", format(player.bullet_speed))),
-                ("Pellets",      format!("{}", player.pellets)),
-                ("Spread",       format!("{}°", format(player.bullet_spread))),
-                ("Penetration",   format!("{}", format(player.bullet_pierce as f32))),
-                ("Bullet Size",   format!("{}%", format(player.bullet_size))),
-                ("Life Steal",   format!("{}%", format(player.life_steal))),
-                ("Critical Strike Chance",   format!("{}%", format(player.crit_percent))),
-            ];
+                let stats = [
+                    ("Health",                  format!("{} / {}", format(player.health), format(player.max_health))),
+                    ("Damage",                  format(player.damage)),
+                    ("Fire Rate",               format!("{}RPM", format(player.fire_rate))),
+                    ("Bullet Speed",            format!("{}m/s", format(player.bullet_speed))),
+                    ("Pellets",                 format!("{}", player.pellets)),
+                    ("Spread",                  format!("{}°", format(player.bullet_spread))),
+                    ("Penetration",             format!("{}", format(player.bullet_pierce as f32))),
+                    ("Bullet Size",             format!("{}%", format(player.bullet_size))),
+                    ("Life Steal",              format!("{}%", format(player.life_steal))),
+                    ("Critical Strike Chance",  format!("{}%", format(player.crit_percent))),
+                ];
 
-            for (label, value) in &stats {
-                spawn_stat_row(root, font, label, value);
-            }
-
-            spawn_divider(root);
-
-            if game_state.item_counts.is_empty() {
-                root.spawn((
-                    Text::new("No items purchased yet."),
-                    TextFont { font: font.clone(), font_size: 13.0, ..default() },
-                    TextColor(Color::srgba(0.5, 0.5, 0.5, 1.0)),
-                ));
-            } else {
-                let mut sorted: Vec<(&String, &usize)> = game_state.item_counts.iter().collect();
-                sorted.sort_by_key(|(name, _)| name.as_str());
-
-                for (name, count) in sorted {
-                    let count_str = if *count >= 1 { format!("{}x", count) } else { String::new() };
-                    spawn_item_row(root, font, name, &count_str);
+                for (label, value) in &stats {
+                    spawn_stat_row(scroll, font, label, value);
                 }
-            }
+
+                spawn_divider(scroll);
+
+                if game_state.item_counts.is_empty() {
+                    scroll.spawn((
+                        Text::new("No items purchased yet."),
+                        TextFont { font: font.clone(), font_size: 13.0, ..default() },
+                        TextColor(Color::srgba(0.5, 0.5, 0.5, 1.0)),
+                    ));
+                } else {
+                    let mut sorted: Vec<(&String, &usize)> = game_state.item_counts.iter().collect();
+                    sorted.sort_by_key(|(name, _)| name.as_str());
+
+                    for (name, count) in sorted {
+                        let count_str = if *count >= 1 { format!("{}x", count) } else { String::new() };
+                        spawn_item_row(scroll, font, name, &count_str);
+                    }
+                }
+            });
         });
 }
 
@@ -197,4 +222,53 @@ fn spawn_item_row(
                 TextColor(Color::srgba(1.0, 1.0, 0.0, 1.0)),
             ));
         });
+}
+
+pub fn send_scroll_events(
+    mut mouse_wheel_reader: MessageReader<MouseWheel>,
+    hover_map: Res<HoverMap>,
+    mut commands: Commands,
+) {
+    for mouse_wheel in mouse_wheel_reader.read() {
+        let mut delta = -Vec2::new(mouse_wheel.x, mouse_wheel.y);
+
+        if mouse_wheel.unit == MouseScrollUnit::Line {
+            delta *= 21.0;
+        }
+
+        for pointer_map in hover_map.values() {
+            for entity in pointer_map.keys().copied() {
+                commands.trigger(Scroll { entity, delta });
+            }
+        }
+    }
+}
+
+fn on_scroll_handler(
+    mut scroll: On<Scroll>,
+    mut query: Query<(&mut ScrollPosition, &Node, &ComputedNode), With<ScrollArea>>,
+) {
+    let Ok((mut scroll_position, node, computed)) = query.get_mut(scroll.entity) else {
+        return;
+    };
+
+    let max_offset = (computed.content_size() - computed.size()) * computed.inverse_scale_factor();
+    let delta = &mut scroll.delta;
+
+    if node.overflow.y == OverflowAxis::Scroll && delta.y != 0. {
+        let max = if delta.y > 0. {
+            scroll_position.y >= max_offset.y
+        } else {
+            scroll_position.y <= 0.
+        };
+
+        if !max {
+            scroll_position.y += delta.y;
+            delta.y = 0.;
+        }
+    }
+
+    if *delta == Vec2::ZERO {
+        scroll.propagate(false);
+    }
 }
