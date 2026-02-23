@@ -34,7 +34,7 @@ impl Plugin for ShopPlugin {
         app.add_systems(OnEnter(AppState::Shop), spawn_shop)
             .add_systems(
                 Update,
-                (shop_interaction, skip_interaction, reroll_interaction).run_if(in_state(AppState::Shop)),
+                (shop_interaction, skip_interaction, reroll_interaction, disabled_card_interaction).run_if(in_state(AppState::Shop)),
             )
             .add_systems(OnExit(AppState::Shop), despawn_shop);
     }
@@ -227,6 +227,7 @@ fn spawn_item_card(
             padding: UiRect::all(Val::Px(20.0)),
             justify_content: JustifyContent::SpaceBetween,
             align_items: AlignItems::Center,
+            display: if disabled { Display::None } else { Display::Flex },
             ..default()
         },
         BackgroundColor(card_color),
@@ -280,14 +281,16 @@ fn spawn_item_card(
 }
 
 pub fn shop_interaction(
+    mut commands: Commands,
     mut interaction_query: Query<
         (&Interaction, &PurchaseButton, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        (Changed<Interaction>, With<Button>, Without<DisabledButton>, Without<SkipButton>, Without<RerollButton>),
     >,
     mut game_state: ResMut<GameState>,
     mut player_query: Query<&mut Player>,
     mut money_query: Query<&mut Text, With<MoneyText>>,
     mut title_query: Query<(&CardTitleText, &mut Text), Without<MoneyText>>,
+    all_cards: Query<(Entity, &PurchaseButton), (With<Button>, Without<SkipButton>)>,
 ) {
     for (interaction, button_data, mut bg_color) in &mut interaction_query {
         match *interaction {
@@ -302,15 +305,24 @@ pub fn shop_interaction(
                         let item_name = item.name();
                         let new_count = game_state.item_count(item_name.as_str());
 
-                        // Update money display
                         if let Ok(mut text) = money_query.single_mut() {
                             **text = format!("${}", game_state.money);
                         }
 
-                        // Update the title on this item's card
                         for (title, mut text) in &mut title_query {
                             if title.0 == item_name {
                                 **text = format!("{} x{}", item_name, new_count);
+                            }
+                        }
+
+                        for (card_entity, card_button) in &all_cards {
+                            let card_item = &card_button.0;
+                            let already_owned = card_item.is_unique()
+                                && game_state.has_item(card_item.name().as_str());
+                            let can_afford = card_item.can_buy(&mut player);
+
+                            if already_owned || !can_afford {
+                                commands.entity(card_entity).insert(DisabledButton);
                             }
                         }
                     }
@@ -352,6 +364,14 @@ pub fn skip_interaction(
             Interaction::Hovered => bg_color.0 = Color::srgba(0.35, 0.35, 0.35, 1.0),
             Interaction::None    => bg_color.0 = Color::srgba(0.2,  0.2,  0.2,  1.0),
         }
+    }
+}
+
+pub fn disabled_card_interaction(
+    mut card_query: Query<(Entity, &mut Node), Added<DisabledButton>>,
+) {
+    for (_entity, mut node) in &mut card_query {
+        node.display = Display::None;
     }
 }
 

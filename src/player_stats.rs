@@ -102,6 +102,7 @@ fn spawn_stats_panel(
                 ("Penetration",   format!("{}", format(player.bullet_pierce as f32))),
                 ("Bullet Size",   format!("{}%", format(player.bullet_size))),
                 ("Life Steal",   format!("{}%", format(player.life_steal))),
+                ("Critical Strike Chance",   format!("{}%", format(player.crit_percent))),
             ];
 
             for (label, value) in &stats {
