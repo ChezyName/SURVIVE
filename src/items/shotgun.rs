@@ -6,7 +6,7 @@ use crate::config::format;
 //adds one pellet per
 const ACCURACY_INCREASE: [f32;2] = [8.0, 2.5]; //accuracy in deg min - max (based on pellet count)
 const COST: usize = 300;
-const MAX_LEVEL: usize = 10;
+const MAX_LEVEL: usize = 8;
 
 #[derive(Default)]
 pub struct Shotgun {
@@ -47,7 +47,7 @@ impl Item for Shotgun {
 
     fn can_buy(&self, player: &mut Player) -> bool {
         let current_lvl = self.level.load(Ordering::Relaxed);
-        return current_lvl <= MAX_LEVEL
+        return current_lvl < MAX_LEVEL
     }
 }
 

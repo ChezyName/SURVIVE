@@ -53,7 +53,7 @@ pub fn spawn_shop(
     let available: Vec<fn() -> Box<dyn Item>> = inventory::iter::<ItemFactory>()
         .map(|f| f.0)
         .filter(|factory| {
-            let item = factory();
+            let item: Box<dyn Item> = factory();
 
             let unique_check = if item.is_unique() {
                 !game_state.has_item(item.name().as_str())

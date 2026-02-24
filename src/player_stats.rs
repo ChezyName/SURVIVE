@@ -65,6 +65,7 @@ fn spawn_stats_panel(
     player: &Player,
     game_state: &GameState,
 ) {
+    //Stat only item list
     commands
         .spawn((
             Node {
@@ -76,7 +77,14 @@ fn spawn_stats_panel(
                 flex_direction: FlexDirection::Column,
                 padding: UiRect::all(Val::Px(20.0)),
                 row_gap: Val::Px(6.0),
+                border: UiRect::right(Val::Px(1.0)),
                 ..default()
+            },
+            BorderColor {
+                top: Color::NONE,
+                right: Color::srgba(1.0, 1.0, 1.0, 0.2),
+                bottom: Color::NONE,
+                left: Color::NONE,
             },
             BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.85)),
             StatsPanel,
@@ -132,9 +140,55 @@ fn spawn_stats_panel(
                 for (label, value) in &stats {
                     spawn_stat_row(scroll, font, label, value);
                 }
+            });
+        });
 
-                spawn_divider(scroll);
+    //item only
+    commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(0.0),
+                top: Val::Px(0.0),
+                width: Val::Px(320.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(20.0)),
+                row_gap: Val::Px(6.0),
+                border: UiRect::left(Val::Px(1.0)),
+                ..default()
+            },
+            BorderColor {
+                top: Color::NONE,
+                left: Color::srgba(1.0, 1.0, 1.0, 0.2),
+                bottom: Color::NONE,
+                right: Color::NONE,
+            },
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.85)),
+            StatsPanel,
+            GlobalZIndex(100),
+        ))
+        .with_children(|root| {
+            root.spawn((
+                Text::new("ITEMS"),
+                TextFont { font: font.clone(), font_size: 22.0, ..default() },
+                TextColor(Color::srgba(1.0, 1.0, 0.0, 1.0)),
+            ));
 
+            spawn_divider(root);
+
+            // Scrollable container
+            root.spawn((
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    flex_grow: 1.0,
+                    overflow: Overflow::scroll_y(),
+                    row_gap: Val::Px(6.0),
+                    ..default()
+                },
+                ScrollArea,
+            ))
+            .with_children(|scroll| {
                 if game_state.item_counts.is_empty() {
                     scroll.spawn((
                         Text::new("No items purchased yet."),
