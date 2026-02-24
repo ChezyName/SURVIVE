@@ -124,18 +124,23 @@ fn spawn_stats_panel(
 
                 spawn_divider(scroll);
 
-                let stats = [
+                let mut stats: Vec<(&str, String)> = vec![
                     ("Health",                  format!("{} / {}", format(player.health), format(player.max_health))),
                     ("Damage",                  format(player.damage)),
-                    ("Fire Rate",               format!("{}RPM", format(player.fire_rate))),
-                    ("Bullet Speed",            format!("{}m/s", format(player.bullet_speed))),
+                    ("Fire Rate",               format!("{} RPM", format(player.fire_rate))),
+                    ("Bullet Speed",            format!("{} m/s", format(player.bullet_speed))),
                     ("Pellets",                 format!("{}", player.pellets)),
                     ("Spread",                  format!("{}°", format(player.bullet_spread))),
                     ("Penetration",             format!("{}", format(player.bullet_pierce as f32))),
                     ("Bullet Size",             format!("{}%", format(player.bullet_size))),
                     ("Life Steal",              format!("{}%", format(player.life_steal))),
                     ("Critical Strike Chance",  format!("{}%", format(player.crit_percent))),
+ 		            ("Lifeline", 		        if player.has_lifeline { "ACTIVE" } else { "DISABLED" }.to_string()),
                 ];
+
+                if player.explosive_bullets {
+                    stats.push(("Explosive Size", format!("{}%", format(player.explosive_radius * 100.0))));
+                }
 
                 for (label, value) in &stats {
                     spawn_stat_row(scroll, font, label, value);

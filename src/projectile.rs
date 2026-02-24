@@ -5,6 +5,7 @@ use bevy::mesh::Indices;
 use crate::player::Player;
 use crate::{config, enemy, GameState};
 use crate::enemy::Enemy;
+use crate::AppState;
 
 #[derive(Component)]
 pub struct Projectile {
@@ -19,11 +20,19 @@ pub struct Projectile {
 #[derive(Component)]
 pub struct Lifetime(pub Timer);
 
+#[derive(Component)]
+pub struct ExplosionVfx {
+    pub timer: Timer,
+    pub max_radius: f32,
+    pub damage: f32,
+    pub damaged_enemies: Vec<Entity>,
+}
+
 pub struct ProjectilePlugin;
 
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (move_projectiles, projectile_lifetime, projectile_collision));
+        app.add_systems(Update, (move_projectiles, projectile_lifetime, projectile_collision, update_explosions).run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -118,14 +127,15 @@ fn projectile_collision(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &Transform, &mut Projectile)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
-    mut player_query: Query<&mut Player>,
+    mut player_query: Query<(&mut Player, &Transform)>,
     mut game_state: ResMut<GameState>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    if let Ok(mut player) = player_query.single_mut() {
+    if let Ok((mut player, player_transform)) = player_query.single_mut() {
         for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
             for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
                 let enemy_pos = enemy_transform.translation.truncate();
-
                 if rect_circle_intersect(
                     projectile_transform,
                     projectile.half_w,
@@ -139,13 +149,106 @@ fn projectile_collision(
                     }
 
                     let mut damage = projectile.damage;
-                    if(player.crit_percent > 0.0 && rand::random_bool((player.crit_percent / 100.0).clamp(0.0, 1.0) as f64)) {
+                    if player.crit_percent > 0.0 && rand::random_bool((player.crit_percent / 100.0).clamp(0.0, 1.0) as f64) {
                         damage += damage * 0.75;
                     }
+
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage);
+
+                    // Explosion
+                    if player.explosive_bullets {
+                        let explosion_pos = projectile_transform.translation.truncate();
+                        let explosion_radius = config::EXPLOSION_RADIUS;
+                        let explosion_damage = damage / 2.0;
+
+                        // Damage nearby enemies
+                        for (other_entity, other_transform, mut other_enemy) in &mut enemy_query {
+                            if other_entity == enemy_entity { continue; } // skip if hit
+                            let dist = other_transform.translation.truncate().distance(explosion_pos);
+                            if dist < explosion_radius {
+                                let falloff = 1.0 - (dist / explosion_radius); // 1.0 at center, 0.0 at edge
+                                let exp_damage = explosion_damage * falloff;
+                                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, other_entity, &mut other_enemy, exp_damage);
+                            }
+                        }
+
+                        commands.spawn((
+                            Mesh2d(meshes.add(Circle::new(1.0))),
+                            MeshMaterial2d(materials.add(ColorMaterial::from(Color::srgba(1.0, 0.5, 0.1, 0.6)))),
+                            Transform::from_translation(explosion_pos.extend(1.0)),
+                            ExplosionVfx {
+                                timer: Timer::from_seconds(0.15, TimerMode::Once),
+                                max_radius: config::EXPLOSION_RADIUS * player.explosive_radius,
+                                damage: damage * 1.75,
+                                damaged_enemies: vec![enemy_entity], // pre-add the directly hit enemy
+                            },
+                        ));
+                    }
+
                     break;
                 }
             }
+        }
+    }
+}
+
+pub fn update_explosions(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut game_state: ResMut<GameState>,
+    mut player_query: Query<&mut Player>,
+    mut params: ParamSet<(
+        Query<(Entity, &mut Transform, &MeshMaterial2d<ColorMaterial>, &mut ExplosionVfx)>,
+        Query<(Entity, &Transform, &mut Enemy)>,
+    )>,
+) {
+    // First pass: update VFX, collect explosion data
+    let mut active_explosions: Vec<(Entity, Vec2, f32, f32)> = Vec::new();
+
+    for (entity, mut transform, material_handle, mut vfx) in &mut params.p0() {
+        vfx.timer.tick(time.delta());
+        let progress = vfx.timer.fraction();
+        let radius = vfx.max_radius * progress;
+        transform.scale = Vec3::splat(radius);
+
+        if let Some(mat) = materials.get_mut(&material_handle.0) {
+            mat.color = Color::srgba(1.0, 0.5 - progress * 0.3, 0.1, 0.6 * (1.0 - progress));
+        }
+
+        active_explosions.push((entity, transform.translation.truncate(), radius, vfx.damage));
+    }
+
+    // Second pass: damage enemies
+    if let Ok(mut player) = player_query.single_mut() {
+        for (vfx_entity, explosion_pos, radius, damage) in &active_explosions {
+            let already_damaged: Vec<Entity> = params.p0()
+                .get(*vfx_entity)
+                .map(|(_, _, _, vfx)| vfx.damaged_enemies.clone())
+                .unwrap_or_default();
+
+            let mut newly_damaged: Vec<Entity> = Vec::new();
+
+            for (enemy_entity, enemy_transform, mut enemy_comp) in &mut params.p1() {
+                if already_damaged.contains(&enemy_entity) { continue; }
+                let dist = enemy_transform.translation.truncate().distance(*explosion_pos);
+                if dist < *radius {
+                    let falloff = 1.0 - (dist / *radius);
+                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage * falloff);
+                    newly_damaged.push(enemy_entity);
+                }
+            }
+
+            if let Ok((_, _, _, mut vfx)) = params.p0().get_mut(*vfx_entity) {
+                vfx.damaged_enemies.extend(newly_damaged);
+            }
+        }
+    }
+
+    // Despawn finished explosions
+    for (entity, _, _, vfx) in &params.p0() {
+        if vfx.timer.is_finished() {
+            commands.entity(entity).despawn();
         }
     }
 }

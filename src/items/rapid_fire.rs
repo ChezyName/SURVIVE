@@ -2,7 +2,7 @@ use super::{Item, ItemFactory};
 use crate::player::Player;
 use crate::config::format;
 
-const FIRE_RATE_INCREASE: f32 = 5.0;
+const FIRE_RATE_INCREASE: f32 = 25.0;
 const COST: usize = 80;
 
 #[derive(Clone, Default)]
@@ -16,13 +16,15 @@ impl Item for RapidFire {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Increases Fire Rate by {}", format(FIRE_RATE_INCREASE))
+        format!("Increases Fire Rate by {} RPM", format(FIRE_RATE_INCREASE))
     }
 
     fn apply(&self, player: &mut Player) {
         let fire_rate = player.fire_rate + FIRE_RATE_INCREASE;
         player.fire_rate = fire_rate;
         player.fire_timer.set_duration(std::time::Duration::from_secs_f32(60.0/fire_rate));
+        player.fire_timer.reset();
+        player.fire_timer.tick(player.fire_timer.duration());
     }
 
     fn is_unique(&self) -> bool { false }

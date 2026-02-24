@@ -23,6 +23,8 @@ pub struct Player {
     pub bullet_pierce: usize,
     pub crit_percent: f32,
     pub has_lifeline: bool,
+    pub explosive_bullets: bool,
+    pub explosive_radius: f32,
 }
 
 impl Default for Player {
@@ -40,7 +42,9 @@ impl Default for Player {
             bullet_size: 100.0,
             bullet_pierce: 1, //can only hit one target before death
             crit_percent: 0.0, //crit in % (0 - 100)%
-	    has_lifeline: false,
+            has_lifeline: false,
+            explosive_bullets: false,
+            explosive_radius: 1.0,
         }
     }
 }

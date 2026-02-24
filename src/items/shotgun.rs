@@ -5,6 +5,7 @@ use crate::config::format;
 
 //adds one pellet per
 const ACCURACY_INCREASE: [f32;2] = [8.0, 2.5]; //accuracy in deg min - max (based on pellet count)
+const FIRE_RATE_DECREASE: f32 = 50.0;
 const COST: usize = 300;
 const MAX_LEVEL: usize = 8;
 
@@ -30,11 +31,17 @@ impl Item for Shotgun {
 
     fn description(&self) -> String {
         let current_lvl = self.level.load(Ordering::Relaxed);
-        format!("Adds Pellet but reduces accuracy by {}", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (current_lvl as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))))
+        format!("Adds Pellet but reduces Accuracy by {} and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (current_lvl as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))
     }
 
     fn apply(&self, player: &mut Player) {
         let current_lvl = self.level.fetch_add(1, Ordering::Relaxed);
+        let fire_rate = (player.fire_rate - FIRE_RATE_DECREASE).max(config::PLAYER_MIN_FIRE_RATE);
+        player.fire_rate = fire_rate;
+        player.fire_timer.set_duration(std::time::Duration::from_secs_f32(60.0/fire_rate));
+        player.fire_timer.reset();
+        player.fire_timer.tick(player.fire_timer.duration());
+        
         player.pellets = player.pellets + 1;
         player.bullet_spread = player.bullet_spread + config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (current_lvl as f32/MAX_LEVEL as f32).clamp(0.0, 1.0));
     }

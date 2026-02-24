@@ -29,3 +29,7 @@ pub mod leach;
 pub mod bullet_size;
 pub mod crit;
 pub mod lifeline;
+pub mod accuracy;
+pub mod explosion;
+pub mod explosion_radius;
+pub mod bullet_speed;
