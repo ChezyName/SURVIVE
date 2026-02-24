@@ -28,3 +28,4 @@ pub mod shotgun;
 pub mod leach;
 pub mod bullet_size;
 pub mod crit;
+pub mod lifeline;

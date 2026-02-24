@@ -61,7 +61,7 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 HealthValueText,
             ));
 
-            // HP Bar Container (The "Bounds")
+            // HB Bars
             inner.spawn((
                 Node {
                     display: Display::Flex,
@@ -73,7 +73,6 @@ fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                     height: Val::Px(18.0),
                     ..default()
                 },
-                // Slant to match Overwatch aesthetic
                 Transform::from_rotation(Quat::from_rotation_z(-0.12)), 
                 HealthBarText,
             ))
@@ -139,17 +138,19 @@ pub fn format_currency(value: usize) -> String {
 fn update_player_ui(
     player_query: Query<&Player>,
     mut segment_query: Query<(&HealthSegment, &mut Visibility, &mut BackgroundColor, &mut Node)>,
-    mut text_query: Query<&mut Text, With<HealthValueText>>,
+    mut text_query: Query<(&mut Text, &mut TextColor), With<HealthValueText>>,
     mut gamestate_query: Query<&mut Text, (With<GameStateText>, Without<HealthValueText>)>,
     mut enemies_query: Query<&mut Text, (With<EnemiesText>, Without<HealthValueText>, Without<GameStateText>)>,
     game_state: Res<GameState>,
     wave_state: Res<wave_manager::WaveStatus>,
 ) {
     let Ok(player) = player_query.single() else { return; };
+    let ui_color = if player.has_lifeline { Color::srgb(0.937, 0.749, 0.016) } else { Color::WHITE };
 
     // Update HP Text
-    if let Ok(mut text) = text_query.single_mut() {
+    if let Ok((mut text, mut color)) = text_query.single_mut() {
         text.0 = format!("{:.0} HP", player.health);
+        color.0 = ui_color;
     }
 
     // Update GS Text
@@ -174,7 +175,7 @@ fn update_player_ui(
             node.display = Display::Flex;
 
             if segment.0 < filled_count {
-                color.0 = Color::WHITE; 
+                color.0 = ui_color; 
             } else {
                 color.0 = Color::srgba(1.0, 1.0, 1.0, 0.1);
             }

@@ -94,7 +94,7 @@ fn spawn_stats_panel(
             root.spawn((
                 Text::new("GAME PAUSED"),
                 TextFont { font: font.clone(), font_size: 22.0, ..default() },
-                TextColor(Color::srgba(1.0, 1.0, 0.0, 1.0)),
+                TextColor(Color::srgb(0.937, 0.749, 0.016)),
             ));
 
             spawn_divider(root);
@@ -172,7 +172,7 @@ fn spawn_stats_panel(
             root.spawn((
                 Text::new("ITEMS"),
                 TextFont { font: font.clone(), font_size: 22.0, ..default() },
-                TextColor(Color::srgba(1.0, 1.0, 0.0, 1.0)),
+                TextColor(Color::srgb(0.937, 0.749, 0.016)),
             ));
 
             spawn_divider(root);

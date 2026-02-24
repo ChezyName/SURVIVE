@@ -22,6 +22,7 @@ pub struct Player {
     pub bullet_size: f32,
     pub bullet_pierce: usize,
     pub crit_percent: f32,
+    pub has_lifeline: bool,
 }
 
 impl Default for Player {
@@ -39,6 +40,7 @@ impl Default for Player {
             bullet_size: 100.0,
             bullet_pierce: 1, //can only hit one target before death
             crit_percent: 0.0, //crit in % (0 - 100)%
+	    has_lifeline: false,
         }
     }
 }
@@ -204,6 +206,12 @@ pub fn take_damage(
     player.health -= damage;
 
     if player.health <= 0.0 {
+        if player.has_lifeline {
+	    player.has_lifeline = false;
+	    player.health = player.max_health;
+	    return;
+	}
+
         info!("Player has died");
         next_state.set(AppState::GameOver);
     }
