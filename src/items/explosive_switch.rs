@@ -1,24 +1,22 @@
 use super::{Item, ItemFactory};
-use crate::{config, player::Player};
-
-pub const EXPLOSION_DAMAGE_MULTI: f32 = 1.75; //Bullet Damage * This = Final Explosion Damage;
+use crate::{player::Player};
 
 #[derive(Clone, Default)]
 pub struct Explosion;
 
 impl Item for Explosion {
     fn name(&self) -> String {
-        "Explosive Rounds".to_string()
+        "Explosive X Switch".to_string()
     }
 
     fn cost(&self) -> usize { 750 }
 
     fn description(&self) -> String {
-        format!("Turns your bullets into explosive rounds.")
+        format!("Allows Missiles to target enemies hit by Explosions.")
     }
 
     fn apply(&self, player: &mut Player) {
-        player.explosive_bullets = true;
+        player.missile_explosion = true;
     }
 
     fn is_unique(&self) -> bool { true }
@@ -27,7 +25,7 @@ impl Item for Explosion {
         Box::new(self.clone())
     }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, player: &mut Player) -> bool { player.explosive_bullets && player.missiles > 0 }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Explosion::default())));

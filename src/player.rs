@@ -8,6 +8,7 @@ use crate::AppState;
 use crate::projectile;
 use crate::config;
 
+//Not a good way to hold items or stats, should be module but...
 #[derive(Component)]
 pub struct Player {
     pub fire_timer: Timer,
@@ -26,6 +27,7 @@ pub struct Player {
     pub explosive_bullets: bool,
     pub explosive_radius: f32,
     pub missiles: usize,
+    pub missile_explosion: bool,
 }
 
 impl Default for Player {
@@ -46,7 +48,8 @@ impl Default for Player {
             has_lifeline: false,
             explosive_bullets: false,
             explosive_radius: 1.0,
-            missiles: 1,
+            missiles: 0,
+            missile_explosion: false,
         }
     }
 }

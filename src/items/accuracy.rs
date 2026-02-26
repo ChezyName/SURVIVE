@@ -2,7 +2,7 @@ use super::{Item, ItemFactory};
 use crate::player::Player;
 use crate::config::format;
 
-const ACCURACY_INCREASE: f32 = 10.0;
+const ACCURACY_INCREASE: f32 = 2.5;
 const COST: usize = 75;
 
 #[derive(Clone, Default)]

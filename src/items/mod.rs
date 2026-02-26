@@ -34,3 +34,4 @@ pub mod explosion;
 pub mod explosion_radius;
 pub mod bullet_speed;
 pub mod switch;
+pub mod explosive_switch;

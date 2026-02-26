@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
-use crate::items::switch;
+use crate::items::{explosion, switch};
 use crate::player::Player;
 use crate::{config, enemy, GameState};
 use crate::enemy::Enemy;
@@ -102,12 +102,15 @@ fn move_projectiles(
     for (mut transform, projectile) in &mut projectile_query {
         let direction = if let Some(target) = projectile.homing {
             if let Ok(enemy_transform) = enemy_query.get(target) {
-                let to_target = (enemy_transform.translation.truncate() - transform.translation.truncate()).normalize_or_zero();
+                let to_target_vec = enemy_transform.translation.truncate() - transform.translation.truncate();
+                let dist = to_target_vec.length();
+                let to_target = to_target_vec.normalize_or_zero();
                 let current_dir = transform.up().truncate();
-                // arc toward target, max turn rate per frame
-                let turn_speed = 5.0;
+
+                let t = 1.0 - ((dist - switch::MIN_MAX_DIST[0]) / (switch::MIN_MAX_DIST[1] - switch::MIN_MAX_DIST[0])).clamp(0.0, 1.0);
+                let turn_speed = switch::TURN_SPEED[0] + (switch::TURN_SPEED[1] - switch::TURN_SPEED[0]) * t;
+
                 let new_dir = current_dir.lerp(to_target, turn_speed * time.delta_secs()).normalize_or_zero();
-                // update rotation to face new direction
                 let angle = new_dir.y.atan2(new_dir.x) - std::f32::consts::FRAC_PI_2;
                 transform.rotation = Quat::from_rotation_z(angle);
                 new_dir.extend(0.0)
@@ -196,16 +199,23 @@ fn projectile_collision(
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage);
 
                     if player.missiles > 0 && projectile.homing.is_none() {
-                            for i in 0..player.missiles {
-                                homing_queue.0.push(HomingSpawnEvent {
-                                    player_transform: *player_transform,
-                                    target_entity: enemy_entity,
-                                    base_damage: projectile.damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
-                                    projectile_index: i,
-                                    total_projectiles: player.missiles,
-                                    delay: i as f32 * Duration::from_millis(switch::SPAWN_DELAY_MS).as_secs_f32(),
-                                });
-                            }
+                        let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
+                        let delay_per = if player.missiles <= 1 {
+                            0.0
+                        } else {
+                            total_delay / (player.missiles - 1) as f32
+                        };
+
+                        for i in 0..player.missiles {
+                            homing_queue.0.push(HomingSpawnEvent {
+                                player_transform: *player_transform,
+                                target_entity: enemy_entity,
+                                base_damage: projectile.damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                projectile_index: i,
+                                total_projectiles: player.missiles,
+                                delay: i as f32 * delay_per,
+                            });
+                        }
                     }
 
                     // Explosion
@@ -222,6 +232,26 @@ fn projectile_collision(
                                 let falloff = 1.0 - (dist / explosion_radius); // 1.0 at center, 0.0 at edge
                                 let exp_damage = explosion_damage * falloff;
                                 enemy::take_damage(&mut commands, &mut *game_state, &mut *player, other_entity, &mut other_enemy, exp_damage);
+
+                                if player.missiles > 0 && projectile.homing.is_none() && player.missile_explosion {
+                                    let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
+                                    let delay_per = if player.missiles <= 1 {
+                                        0.0
+                                    } else {
+                                        total_delay / (player.missiles - 1) as f32
+                                    };
+
+                                    for i in 0..player.missiles {
+                                        homing_queue.0.push(HomingSpawnEvent {
+                                            player_transform: *player_transform,
+                                            target_entity: enemy_entity,
+                                            base_damage: projectile.damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                            projectile_index: i,
+                                            total_projectiles: player.missiles,
+                                            delay: i as f32 * delay_per,
+                                        });
+                                    }
+                                }
                             }
                         }
 
@@ -232,7 +262,7 @@ fn projectile_collision(
                             ExplosionVfx {
                                 timer: Timer::from_seconds(0.15, TimerMode::Once),
                                 max_radius: config::EXPLOSION_RADIUS * player.explosive_radius,
-                                damage: damage * 1.75,
+                                damage: damage * explosion::EXPLOSION_DAMAGE_MULTI,
                                 damaged_enemies: vec![enemy_entity], // pre-add the directly hit enemy
                             },
                         ));
@@ -250,11 +280,12 @@ pub fn update_explosions(
     time: Res<Time>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_state: ResMut<GameState>,
-    mut player_query: Query<&mut Player>,
     mut params: ParamSet<(
         Query<(Entity, &mut Transform, &MeshMaterial2d<ColorMaterial>, &mut ExplosionVfx)>,
         Query<(Entity, &Transform, &mut Enemy)>,
     )>,
+    mut homing_queue: ResMut<HomingSpawnQueue>,
+    mut player_query: Query<(&mut Player, &Transform)>,
 ) {
     // First pass: update VFX, collect explosion data
     let mut active_explosions: Vec<(Entity, Vec2, f32, f32)> = Vec::new();
@@ -273,7 +304,7 @@ pub fn update_explosions(
     }
 
     // Second pass: damage enemies
-    if let Ok(mut player) = player_query.single_mut() {
+    if let Ok((mut player, player_transform)) = player_query.single_mut() {
         for (vfx_entity, explosion_pos, radius, damage) in &active_explosions {
             let already_damaged: Vec<Entity> = params.p0()
                 .get(*vfx_entity)
@@ -289,6 +320,26 @@ pub fn update_explosions(
                     let falloff = 1.0 - (dist / *radius);
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage * falloff);
                     newly_damaged.push(enemy_entity);
+
+                    if player.missiles > 0 && player.missile_explosion {
+                        let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
+                        let delay_per = if player.missiles <= 1 {
+                            0.0
+                        } else {
+                            total_delay / (player.missiles - 1) as f32
+                        };
+
+                        for i in 0..player.missiles {
+                            homing_queue.0.push(HomingSpawnEvent {
+                                player_transform: *player_transform,
+                                target_entity: enemy_entity,
+                                base_damage: (damage.max(1.0) / explosion::EXPLOSION_DAMAGE_MULTI) * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                projectile_index: i,
+                                total_projectiles: player.missiles,
+                                delay: i as f32 * delay_per,
+                            });
+                        }
+                    }
                 }
             }
 
@@ -340,7 +391,7 @@ pub fn spawn_homing_projectiles(
             if event.projectile_index % 2 == 0 { 60.0_f32.to_radians() } else { -60.0_f32.to_radians() }
         } else {
             let t = event.projectile_index as f32 / (event.total_projectiles - 1) as f32;
-            let spread = 120.0_f32.to_radians(); // -60 to +60
+            let spread = 120.0; // -60 to +60
             -spread / 2.0 + t * spread
         };
 
@@ -348,7 +399,7 @@ pub fn spawn_homing_projectiles(
         let to_enemy = (enemy_transform.translation.truncate() - event.player_transform.translation.truncate()).normalize_or_zero();
         let base_angle = to_enemy.y.atan2(to_enemy.x) - std::f32::consts::FRAC_PI_2;
         let mut spawn_transform = event.player_transform;
-        spawn_transform.rotation = Quat::from_rotation_z(base_angle + angle_offset);
+        spawn_transform.rotation = Quat::from_rotation_z(base_angle + angle_offset.to_radians());
 
         let size = ((player.bullet_size / 100.0) * (switch::SIZE_MULTI / 100.0) * 1.0).max(3.0);
         let speed = (player.bullet_speed * (switch::SPEED_MULTI / 100.0)).clamp(switch::SPEED_MIN, 999.99);

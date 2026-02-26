@@ -135,6 +135,7 @@ fn spawn_stats_panel(
                     ("Bullet Size",             format!("{}%", format(player.bullet_size))),
                     ("Life Steal",              format!("{}%", format(player.life_steal))),
                     ("Critical Strike Chance",  format!("{}%", format(player.crit_percent))),
+                    ("Missiles",                format!("{}", player.missiles)),
  		            ("Lifeline", 		        if player.has_lifeline { "ACTIVE" } else { "DISABLED" }.to_string()),
                 ];
 

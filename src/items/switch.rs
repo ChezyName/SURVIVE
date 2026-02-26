@@ -9,7 +9,9 @@ pub const DAMAGE_REDUCTION_PER_BULLET: f32 = 15.0;  //15% damage for all bullets
 pub const SPEED_MULTI: f32 = 175.0;                 //Extra speed for bullets
 pub const SPEED_MIN: f32 = 350.0;                   //Extra speed for bullets in %
 pub const SIZE_MULTI: f32 = 30.0;                   //Extra size for bulelts in %
-pub const SPAWN_DELAY_MS: u64 = 150;                //Time between each spawn in ms
+pub const SPAWN_TIME_MS: u64 = 250;                 //Total time to spawn x Projectiles
+pub const TURN_SPEED: [f32;2] = [2.5, 12.0];        //Speed of Turning Angle min-max (more accurate the closer the bullets are)
+pub const MIN_MAX_DIST: [f32; 2] = [150.0, 1000.0]; //Distance min-max in which the bullets are more accurate
 
 #[derive(Default)]
 pub struct Switch {
@@ -32,12 +34,13 @@ impl Item for Switch {
     fn cost(&self) -> usize { COST }
 
     fn description(&self) -> String {
-        format!("Add 1 Extra Projectile to Missle. Auto fires homing missiles when you hit an enemy with a bullet.")
+        format!("Add 1 Extra Projectile to Missle. Auto fires homing missiles when you hit an enemy with a bullet. Reduces pellet count by 1.")
     }
 
     fn apply(&self, player: &mut Player) {
         self.level.fetch_add(1, Ordering::Relaxed);
         player.missiles += 1;
+        player.pellets = (player.pellets - 1).max(1);
     }
 
     fn is_unique(&self) -> bool { false }
