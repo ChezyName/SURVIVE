@@ -26,7 +26,7 @@ pub fn start_wave(
     // ... other params
 ) {
     game_state.round += 1;
-    let wave = game_state.round;
+    let wave = (game_state.round as f32).powf(config::WAVE_EXPO).min(1.0) as usize;
 
     // 1. Calculate Targets
     let mut targets = HashMap::new();

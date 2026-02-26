@@ -1,4 +1,3 @@
-#read how many lines
 from pathlib import Path
 import os
 
@@ -9,20 +8,28 @@ def CountLines(file_path):
 def CountAllLines():
     directory_path = Path("src")
     Files = list(directory_path.glob('**/*'))
+    
     total = 0
-    max_length = max(len(str(filePath)) for filePath in Files)  # Find the longest file path
+    dir_totals = {}
+    max_length = max(len(os.path.basename(str(f))) for f in Files if f.is_file())
 
     for filePath in Files:
-        if(not filePath.is_file()):
-           #print(str(filePath) + " is not file")
-           continue
+        if not filePath.is_file():
+            continue
         lines = CountLines(str(filePath))
         file_name = os.path.basename(str(filePath))
-        print(f"{file_name.ljust(max_length)} | {lines} Lines")  # Left-pad file paths
+        dir_name = str(filePath.parent)
+        
+        print(f"{file_name.ljust(max_length)} | {lines} Lines")
+        
         total += lines
+        dir_totals[dir_name] = dir_totals.get(dir_name, 0) + lines
 
-    print(f"{' ' * (max_length + 1)}| {total} Total Lines")  # Align the total count
-    
+    print("\n\n")
+    print(f"{'Total'.ljust(max_length)} | {total} Lines")
+    print(f"{''.ljust(max_length)} |")
+    for dir_name, dir_total in sorted(dir_totals.items()):
+        print(f"{dir_name.ljust(max_length)} | {dir_total} Lines")
 
 if __name__ == "__main__":
     CountAllLines()

@@ -3,28 +3,28 @@ use crate::player::Player;
 use crate::config::format;
 
 #[derive(Clone, Default)]
-pub struct DoubleUp;
+pub struct TripleUp;
 
-impl Item for DoubleUp {
+impl Item for TripleUp {
     fn name(&self) -> String {
-        "Double-Up".to_string()
+        "Triple-Up".to_string()
     }
 
-    fn cost(&self) -> usize { 250 }
+    fn cost(&self) -> usize { 350 }
 
     fn description(&self, player: &mut Player) -> String {
-        format!("Generate Double Gold on Killing Enemies")
+        format!("Generate Triple Gold on Killing Enemies")
     }
 
     fn apply(&self, player: &mut Player) {
-        player.gold_multi = 2.0;
+        player.gold_multi = 3.0;
     }
 
     fn is_unique(&self) -> bool { true }
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, player: &mut Player) -> bool { player.gold_multi == 2.0 }
 }
 
-inventory::submit!(ItemFactory(|| Box::new(DoubleUp::default())));
+inventory::submit!(ItemFactory(|| Box::new(TripleUp::default())));

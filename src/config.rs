@@ -7,7 +7,7 @@ pub const REROLL_COST_PER_REROLL: usize = 10; //Cost of Re-Roll Per Re-Roll
 
 //Player Defaults
 pub const PLAYER_MAX_HEALTH: f32 = 100.0;
-pub const PLAYER_FIRE_RATE: f32 = 180.0; // 60 / rate where rate = RPM (rounds per min)
+pub const PLAYER_FIRE_RATE: f32 = 240.0; // 60 / rate where rate = RPM (rounds per min)
 pub const PLAYER_HIT_BOX: f32 = 20.0;
 pub const PLAYER_MIN_FIRE_RATE: f32 = 60.0; // 60 / rate where rate = RPM (rounds per min)
 
@@ -17,22 +17,23 @@ pub const UI_HEALTH_DIV: f32 = 10.0; //How much health per segment
 //Bullet Defaults
 pub const BULLET_SPEED: f32 = 250.0;
 pub const BULLET_LIFETIME: f32 = 15.0;
-pub const BULLET_DAMAGE: f32 = 15.0;
+pub const BULLET_DAMAGE: f32 = 25.0;
 
 pub const EXPLOSION_RADIUS: f32 = 80.0;
 
 //Basic Enemy Stuff, Multiplies Later
-pub const ENEMY_SPAWN_DIST: [f32;2] = [500.0, 1500.0]; //range in m
+pub const WAVE_EXPO: f32 = 1.6;                         // Wave Num ^ this = True Wave Number
+pub const ENEMY_SPAWN_DIST: [f32;2] = [500.0, 2500.0]; //range in m
 pub const ENEMY_SWITCH_TIME_RANGE: [f32; 2] = [150.0, 1500.0]; //time range in ms
 
 //Wave Spawning
 pub const WAVE_ENEMIES_PER_FRAME: [i32; 2] = [5, 80]; //How Many Enemies (Min - Max) Can Spawn Per Frame
-pub const WAVE_ENEMIES_TIME_PER_FRAME: [i32; 2] = [50, 1000]; //How Much Time Between The Frames (Min - Max) in ms
+pub const WAVE_ENEMIES_TIME_PER_FRAME: [i32; 2] = [50, 500]; //How Much Time Between The Frames (Min - Max) in ms
 pub const WAVE_ENEMIES_PER_WAVE: usize = 6; //How Many Enemies Per Wave
 pub const WAVE_UNIQUE_ENEMY_WAVE: usize = 2; //Spawn Large Enemies Every 2 (Other) Waves
 pub const WAVE_LARGE_ENEMY_WAVE: usize = 3; //Spawn Large Enemies Every 3 Waves
-pub const WAVE_COLOSSAL_ENEMY_WAVE: usize = 5; //Spawn Large Enemies Every 5 Waves
-pub const WAVE_BOSS_ENEMY_WAVE: usize = 10; //Spawn Boss Enemy Every 10 Waves
+pub const WAVE_COLOSSAL_ENEMY_WAVE: usize = 4; //Spawn Large Enemies Every 5 Waves
+pub const WAVE_BOSS_ENEMY_WAVE: usize = 5; //Spawn Boss Enemy Every 10 Waves
 
 //Enemy Configs
 pub struct EnemyConfig {

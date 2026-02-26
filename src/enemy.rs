@@ -219,7 +219,7 @@ pub fn take_damage(
         commands.entity(entity).despawn();
         game_state.total_enemies_killed += 1;
         *game_state.enemies_killed.entry(enemy.self_type).or_insert(0) += 1;
-        game_state.money += enemy.price_tag;
+        game_state.money += (enemy.price_tag as f32 * player.gold_multi) as usize;
         if player.life_steal > 0.0 {
             player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)
         }
