@@ -8,6 +8,7 @@ mod items;
 mod wave_manager;
 mod shop;
 mod player_stats;
+mod wave;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
@@ -39,6 +40,7 @@ fn main() {
         .add_plugins(player_stats::PlayerStatsPlugin) //Player UI
         .add_plugins(projectile::ProjectilePlugin)// Projectiles
         .add_plugins(enemy::EnemyPlugin)// Enemies
+        .add_plugins(wave::WavePlugin)
         //Shop
         .add_plugins(shop::ShopPlugin)
         .run();

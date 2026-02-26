@@ -7,6 +7,7 @@ use bevy::mesh::Indices;
 use crate::AppState;
 use crate::projectile;
 use crate::config;
+use crate::wave;
 
 //Not a good way to hold items or stats, should be module but...
 #[derive(Component)]
@@ -30,6 +31,8 @@ pub struct Player {
     pub missile_explosion: bool,
     pub gold_per_second: f32,
     pub gold_multi: f32,
+    pub wave_timer: Timer, //pulsating waves that deal damage
+    pub wave_time: f32,
 }
 
 impl Default for Player {
@@ -53,7 +56,9 @@ impl Default for Player {
             missiles: 0,
             missile_explosion: false,
             gold_per_second: 0.0,
-            gold_multi: 1.0
+            gold_multi: 1.0,
+            wave_timer: Timer::from_seconds(1.0, TimerMode::Once),
+            wave_time: -1.0,
         }
     }
 }
@@ -63,7 +68,36 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player)
-           .add_systems(Update, (player_aim_system, player_shooting).run_if(in_state(AppState::InGame)));
+           .add_systems(Update, (player_aim_system, player_shooting, player_wave_update).run_if(in_state(AppState::InGame)));
+    }
+}
+
+fn player_wave_update(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut player_query: Query<(&Transform, &mut Player)>,
+    mut time: ResMut<Time<Virtual>>,
+) {
+    if time.is_paused() { return; }
+
+    if let Ok((transform, mut player)) = player_query.single_mut() {
+        player.wave_timer.tick(time.delta());
+
+        if player.wave_time != -1.0 && player.wave_timer.is_finished() {
+            //spawn wave
+            wave::spawn_wave(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                transform.translation,
+                player.damage / 4.0,
+                500.0,
+                player.bullet_speed * 0.75,
+            );
+
+            player.wave_timer.reset();
+        }
     }
 }
 
@@ -212,6 +246,8 @@ fn player_shooting(
 
 pub fn take_damage(
     commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<ColorMaterial>>,
     entity: Entity,
     player: &mut Player, // self
     damage: f32,
@@ -221,10 +257,21 @@ pub fn take_damage(
 
     if player.health <= 0.0 {
         if player.has_lifeline {
-	    player.has_lifeline = false;
-	    player.health = player.max_health;
-	    return;
-	}
+            player.has_lifeline = false;
+            player.health = player.max_health;
+
+            wave::spawn_wave(
+                commands,
+                meshes,
+                materials,
+                vec3(0.0, 0.0, 0.0),
+                player.damage.max(player.max_health),
+                5000.0,
+                player.bullet_speed.max(250.0),
+            );
+
+            return;
+        }
 
         info!("Player has died");
         next_state.set(AppState::GameOver);

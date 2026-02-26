@@ -112,6 +112,8 @@ fn enemy_ai_system(
 
 fn enemy_collision_system(
     mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     mut player_query: Query<(Entity, &Transform, &mut Player)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
     mut next_state: ResMut<NextState<AppState>>,
@@ -122,7 +124,7 @@ fn enemy_collision_system(
 
             if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {
                 commands.entity(enemy_entity).despawn();
-                player::take_damage(&mut commands, player_entity, &mut player_comp, enemy_comp.damage, &mut next_state);
+                player::take_damage(&mut commands, &mut meshes, &mut materials, player_entity, &mut player_comp, enemy_comp.damage, &mut next_state);
             }
         }
     }

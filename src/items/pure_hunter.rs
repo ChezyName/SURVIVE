@@ -13,7 +13,7 @@ impl Item for PureHunter {
     fn cost(&self) -> usize { 375 }
 
     fn description(&self, player: &mut Player) -> String {
-        format!("Become the true form of a Hunter. Upgrades bullet damage, and number of pellets.")
+        format!("Become the true form of a Hunter, one who wields a shotgun. Upgrades bullet damage, and number of pellets.")
     }
 
     fn apply(&self, player: &mut Player) {
