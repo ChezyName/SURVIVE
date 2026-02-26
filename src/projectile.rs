@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
+use crate::items::switch;
 use crate::player::Player;
 use crate::{config, enemy, GameState};
 use crate::enemy::Enemy;
@@ -15,6 +18,7 @@ pub struct Projectile {
     pub max_hits: usize,
     pub half_w: f32,
     pub half_l: f32,
+    pub homing: Option<Entity>,
 }
 
 #[derive(Component)]
@@ -28,11 +32,24 @@ pub struct ExplosionVfx {
     pub damaged_enemies: Vec<Entity>,
 }
 
+#[derive(Resource, Default)]
+pub struct HomingSpawnQueue(pub Vec<HomingSpawnEvent>);
+
+#[derive(Clone)]
+pub struct HomingSpawnEvent {
+    pub player_transform: Transform,
+    pub target_entity: Entity,
+    pub base_damage: f32,
+    pub projectile_index: usize,
+    pub total_projectiles: usize,
+    pub delay: f32,
+}
+
 pub struct ProjectilePlugin;
 
 impl Plugin for ProjectilePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (move_projectiles, projectile_lifetime, projectile_collision, update_explosions).run_if(in_state(AppState::InGame)));
+        app.add_systems(Update, (move_projectiles, projectile_lifetime, projectile_collision, update_explosions, spawn_homing_projectiles).run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -42,7 +59,8 @@ pub fn spawn_projectile(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     player: &mut Player,
-    player_transform: Transform
+    player_transform: Transform,
+    homing: Option<Entity>,
 ) {
     //bulelt stats from player obj
     let size = (player.bullet_size / 100.0) * 1.0;
@@ -68,7 +86,7 @@ pub fn spawn_projectile(
     mesh.insert_indices(Indices::U32(indices));
 
     commands.spawn((
-        Projectile { damage, speed, hits, max_hits, half_w, half_l },
+        Projectile { damage, speed, hits, max_hits, half_w, half_l, homing },
         Lifetime(Timer::from_seconds(config::BULLET_LIFETIME, TimerMode::Once)),
         Mesh2d(meshes.add(mesh)),
         MeshMaterial2d(materials.add(Color::WHITE)),
@@ -76,10 +94,31 @@ pub fn spawn_projectile(
     ));
 }
 
-fn move_projectiles(time: Res<Time>, mut query: Query<(&mut Transform, &Projectile)>) {
-    for (mut transform, stats) in &mut query {
-        let direction = transform.up(); 
-        transform.translation += direction * stats.speed * time.delta_secs();
+fn move_projectiles(
+    time: Res<Time>,
+    mut projectile_query: Query<(&mut Transform, &Projectile)>,
+    enemy_query: Query<&Transform, (With<Enemy>, Without<Projectile>)>,
+) {
+    for (mut transform, projectile) in &mut projectile_query {
+        let direction = if let Some(target) = projectile.homing {
+            if let Ok(enemy_transform) = enemy_query.get(target) {
+                let to_target = (enemy_transform.translation.truncate() - transform.translation.truncate()).normalize_or_zero();
+                let current_dir = transform.up().truncate();
+                // arc toward target, max turn rate per frame
+                let turn_speed = 5.0;
+                let new_dir = current_dir.lerp(to_target, turn_speed * time.delta_secs()).normalize_or_zero();
+                // update rotation to face new direction
+                let angle = new_dir.y.atan2(new_dir.x) - std::f32::consts::FRAC_PI_2;
+                transform.rotation = Quat::from_rotation_z(angle);
+                new_dir.extend(0.0)
+            } else {
+                transform.up().as_vec3()
+            }
+        } else {
+            transform.up().as_vec3()
+        };
+
+        transform.translation += direction * projectile.speed * time.delta_secs();
     }
 }
 
@@ -131,6 +170,7 @@ fn projectile_collision(
     mut game_state: ResMut<GameState>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut homing_queue: ResMut<HomingSpawnQueue>,
 ) {
     if let Ok((mut player, player_transform)) = player_query.single_mut() {
         for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
@@ -154,6 +194,19 @@ fn projectile_collision(
                     }
 
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage);
+
+                    if player.missiles > 0 && projectile.homing.is_none() {
+                            for i in 0..player.missiles {
+                                homing_queue.0.push(HomingSpawnEvent {
+                                    player_transform: *player_transform,
+                                    target_entity: enemy_entity,
+                                    base_damage: projectile.damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                    projectile_index: i,
+                                    total_projectiles: player.missiles,
+                                    delay: i as f32 * Duration::from_millis(switch::SPAWN_DELAY_MS).as_secs_f32(),
+                                });
+                            }
+                    }
 
                     // Explosion
                     if player.explosive_bullets {
@@ -250,5 +303,83 @@ pub fn update_explosions(
         if vfx.timer.is_finished() {
             commands.entity(entity).despawn();
         }
+    }
+}
+
+pub fn spawn_homing_projectiles(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut queue: ResMut<HomingSpawnQueue>,
+    mut player_query: Query<&mut Player>,
+    enemy_query: Query<&Transform, With<Enemy>>,
+    time: Res<Time>,
+) {
+    if queue.0.is_empty() { return; }
+    let Ok(mut player) = player_query.single_mut() else { return };
+
+    // Tick all delays
+    for event in queue.0.iter_mut() {
+        event.delay -= time.delta_secs();
+    }
+
+    let mut ready = Vec::new();
+    queue.0.retain(|e| {
+        if e.delay <= 0.0 {
+            ready.push(e.clone());
+            false
+        } else {
+            true
+        }
+    });
+
+    for event in ready {
+        let Ok(enemy_transform) = enemy_query.get(event.target_entity) else { continue };
+
+        let angle_offset = if event.total_projectiles <= 1 {
+            if event.projectile_index % 2 == 0 { 60.0_f32.to_radians() } else { -60.0_f32.to_radians() }
+        } else {
+            let t = event.projectile_index as f32 / (event.total_projectiles - 1) as f32;
+            let spread = 120.0_f32.to_radians(); // -60 to +60
+            -spread / 2.0 + t * spread
+        };
+
+        // Aim from player toward enemy, offset by arc angle
+        let to_enemy = (enemy_transform.translation.truncate() - event.player_transform.translation.truncate()).normalize_or_zero();
+        let base_angle = to_enemy.y.atan2(to_enemy.x) - std::f32::consts::FRAC_PI_2;
+        let mut spawn_transform = event.player_transform;
+        spawn_transform.rotation = Quat::from_rotation_z(base_angle + angle_offset);
+
+        let size = ((player.bullet_size / 100.0) * (switch::SIZE_MULTI / 100.0) * 1.0).max(3.0);
+        let speed = (player.bullet_speed * (switch::SPEED_MULTI / 100.0)).clamp(switch::SPEED_MIN, 999.99);
+        let width = size;
+        let length = ((speed / 100.0).max(12.0) * size) / 2.0;
+        let half_w = width / 2.0;
+        let half_l = length / 2.0;
+
+        let points = vec![
+            [-half_w, half_l, 0.0], [half_w, half_l, 0.0],
+            [half_w, -half_l, 0.0], [-half_w, -half_l, 0.0],
+        ];
+        let indices = vec![0, 2, 1, 0, 3, 2];
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::RENDER_WORLD);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
+        mesh.insert_indices(Indices::U32(indices));
+
+        commands.spawn((
+            Projectile {
+                damage: event.base_damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0),
+                speed,
+                hits: 0,
+                max_hits: 1,
+                half_w,
+                half_l,
+                homing: Some(event.target_entity),
+            },
+            Lifetime(Timer::from_seconds(config::BULLET_LIFETIME, TimerMode::Once)),
+            Mesh2d(meshes.add(mesh)),
+            MeshMaterial2d(materials.add(Color::srgba(1.0, 1.0, 0.0, 1.0))), // green tint for homing
+            spawn_transform,
+        ));
     }
 }

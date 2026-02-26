@@ -25,6 +25,7 @@ pub struct Player {
     pub has_lifeline: bool,
     pub explosive_bullets: bool,
     pub explosive_radius: f32,
+    pub missiles: usize,
 }
 
 impl Default for Player {
@@ -45,6 +46,7 @@ impl Default for Player {
             has_lifeline: false,
             explosive_bullets: false,
             explosive_radius: 1.0,
+            missiles: 1,
         }
     }
 }
@@ -193,7 +195,8 @@ fn player_shooting(
                     &mut meshes,
                     &mut materials,
                     &mut *player,
-                    b_transform
+                    b_transform,
+                    None,
                 );
             }
         }

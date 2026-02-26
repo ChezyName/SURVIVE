@@ -12,6 +12,7 @@ mod player_stats;
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
 use crate::gamestate::GameState;
+use crate::projectile::HomingSpawnQueue;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
@@ -29,7 +30,7 @@ fn main() {
         .insert_resource(GameState::default())
         .init_state::<AppState>()
         .init_resource::<wave_manager::WaveStatus>()
-        //Gameplay
+        .insert_resource(HomingSpawnQueue::default())
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave)
         .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end, gamestate::update_playtime).chain().run_if(in_state(AppState::InGame)))
