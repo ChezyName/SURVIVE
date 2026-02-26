@@ -134,9 +134,11 @@ pub fn spawn_enemy(
     materials: &mut ResMut<Assets<ColorMaterial>>,
     angle_degrees: f32, 
     enemy_type: EnemyType,
+    game_state: &mut GameState,
 ) {
     let enemy_data = enemy_type.get_config();
     let sides = enemy_data.sides.max(3); //polygons are 3 sides min
+    let health = enemy_data.health + (enemy_data.health_per_round * game_state.round as f32).max(0.0);
 
     let spawn_distance = rand::random_range(config::ENEMY_SPAWN_DIST[0]..config::ENEMY_SPAWN_DIST[1]);
     let radians = angle_degrees.to_radians();
@@ -184,7 +186,7 @@ pub fn spawn_enemy(
             ..default()
         },
         Enemy {
-            health: enemy_data.health * 1000.0,
+            health: health,
             speed: enemy_data.speed,
             damage: enemy_data.damage,
             price_tag: enemy_data.reward,
@@ -217,7 +219,7 @@ pub fn take_damage(
         commands.entity(entity).despawn();
         game_state.total_enemies_killed += 1;
         *game_state.enemies_killed.entry(enemy.self_type).or_insert(0) += 1;
-        game_state.money += enemy.price_tag * 5000;
+        game_state.money += enemy.price_tag;
         if player.life_steal > 0.0 {
             player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)
         }

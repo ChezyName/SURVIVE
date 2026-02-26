@@ -26,9 +26,7 @@ impl Item for Accuracy {
 
     fn is_unique(&self) -> bool { false }
 
-    fn clone_box(&self) -> Box<dyn Item> {
-        Box::new(self.clone())
-    }
+    fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
     fn can_buy(&self, player: &mut Player) -> bool { return true; }
 }

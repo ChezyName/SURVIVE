@@ -70,7 +70,7 @@ pub fn start_wave(
 pub fn spawn_tick_system(
     time: Res<Time>,
     mut wave_status: ResMut<WaveStatus>,
-    game_state: Res<GameState>,
+    mut game_state: ResMut<GameState>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -88,7 +88,7 @@ pub fn spawn_tick_system(
         for _ in 0..spawn_burst_limit {
             if let Some(etype) = wave_status.spawn_queue.pop() {
                 let angle: f32 = rand::random_range(0.0..360.0);
-                enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, angle, etype);
+                enemy::spawn_enemy(&mut commands, &mut meshes, &mut materials, angle, etype, &mut *game_state);
             } else { break; }
         }
 

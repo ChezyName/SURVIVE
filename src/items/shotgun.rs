@@ -20,7 +20,7 @@ impl Item for Shotgun {
     fn cost(&self) -> usize { COST }
 
     fn description(&self, player: &mut Player) -> String {
-        format!("Adds Pellet but reduces Accuracy by {} and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (player.pellets.max(0) as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))
+        format!("Adds Pellet but reduces Accuracy by {}° and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (player.pellets.max(0) as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))
     }
 
     fn apply(&self, player: &mut Player) {
@@ -37,9 +37,7 @@ impl Item for Shotgun {
 
     fn is_unique(&self) -> bool { false }
 
-    fn clone_box(&self) -> Box<dyn Item> {
-        Box::new(self.clone())
-    }
+    fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
     fn can_buy(&self, player: &mut Player) -> bool {
         return player.pellets < MAX_LEVEL

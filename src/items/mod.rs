@@ -35,3 +35,5 @@ pub mod explosion_radius;
 pub mod bullet_speed;
 pub mod switch;
 pub mod explosive_switch;
+pub mod passive_income;
+pub mod gold_multi;

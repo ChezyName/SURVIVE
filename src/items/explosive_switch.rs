@@ -21,9 +21,7 @@ impl Item for Explosion {
 
     fn is_unique(&self) -> bool { true }
 
-    fn clone_box(&self) -> Box<dyn Item> {
-        Box::new(self.clone())
-    }
+    fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
     fn can_buy(&self, player: &mut Player) -> bool { player.explosive_bullets && player.missiles > 0 }
 }

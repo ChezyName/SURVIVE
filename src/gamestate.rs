@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 use crate::enemy::EnemyType;
+use crate::player::Player;
 
 #[derive(Resource, Default)]
 pub struct GameState {
@@ -16,9 +17,11 @@ pub struct GameState {
 pub fn update_playtime(
     mut game_state: ResMut<GameState>,
     time: Res<Time<Real>>,
+    player_query: Query<&Player>,
 ) {
     game_state.playtime_secs += time.delta_secs();
-    game_state.money += (1500.0 * time.delta_secs()) as usize;
+    let Ok(player) = player_query.single() else { return };
+    game_state.money += (player.gold_per_second * time.delta_secs()) as usize;
 }
 
 //turns playtime into d h m s

@@ -43,6 +43,7 @@ pub struct EnemyConfig {
     pub reward: usize,
     pub speed: f32,
     pub movement: MovementType,
+    pub health_per_round: f32,
 }
 
 pub fn lerp(start: f32, end: f32, t: f32) -> f32 {
@@ -69,6 +70,7 @@ impl EnemyType {
                 reward:   lerp(10.0, 20.0, level) as usize,
                 sides:    3,
                 movement: MovementType::Line,
+                health_per_round: lerp(1.0, 5.0, level),
             },
             EnemyType::Unique => EnemyConfig {
                 health:   lerp(30.0, 5.0, level),
@@ -78,6 +80,7 @@ impl EnemyType {
                 reward:   lerp(5.0, 15.0, level) as usize,
                 sides:    4,
                 movement: MovementType::Switch,
+                health_per_round: lerp(3.0, 0.0, level),
             },
             EnemyType::Large => EnemyConfig {
                 health:   lerp(25.0, 100.0, level),
@@ -87,6 +90,7 @@ impl EnemyType {
                 reward:   lerp(40.0, 80.0, level) as usize,
                 sides:    6,
                 movement: rand_type(&[MovementType::Line, MovementType::Circular]),
+                health_per_round: lerp(5.0, 15.0, level),
             },
             EnemyType::Colossal => EnemyConfig {
                 health:   lerp(250.0, 500.0, level),
@@ -96,6 +100,7 @@ impl EnemyType {
                 reward:   lerp(15.0, 40.0, level) as usize,
                 sides:    8,
                 movement: rand_type(&[MovementType::Line, MovementType::ZigZag]),
+                health_per_round: lerp(5.0, 25.0, level),
             },
             EnemyType::Boss => EnemyConfig {
                 health:   lerp(400.0, 1000.0, level),
@@ -105,6 +110,7 @@ impl EnemyType {
                 reward:   250,
                 sides:    100,
                 movement: rand_type(&[MovementType::Line, MovementType::ZigZag, MovementType::Switch]),
+                health_per_round: lerp(30.0, 80.0, level),
             },
         }
     }

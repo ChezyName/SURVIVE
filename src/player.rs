@@ -28,6 +28,8 @@ pub struct Player {
     pub explosive_radius: f32,
     pub missiles: usize,
     pub missile_explosion: bool,
+    pub gold_per_second: f32,
+    pub gold_multi: f32,
 }
 
 impl Default for Player {
@@ -50,6 +52,8 @@ impl Default for Player {
             explosive_radius: 1.0,
             missiles: 0,
             missile_explosion: false,
+            gold_per_second: 0.0,
+            gold_multi: 1.0
         }
     }
 }

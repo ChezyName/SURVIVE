@@ -121,6 +121,7 @@ fn spawn_stats_panel(
                 }
 
                 spawn_stat_row(scroll, font, "Total Enemies Killed", &format(game_state.total_enemies_killed as f32));
+                if player.gold_per_second > 0.0 { spawn_stat_row(scroll, font, "Gold Per Second", &format!("{}g", format(player.gold_per_second as f32))); }
 
                 spawn_divider(scroll);
 

@@ -3,21 +3,21 @@ use crate::player::Player;
 use crate::config::format;
 
 #[derive(Clone, Default)]
-pub struct Lifeline;
+pub struct PassiveIncome;
 
-impl Item for Lifeline {
+impl Item for PassiveIncome {
     fn name(&self) -> String {
-        "Lifeline".to_string()
+        "Double-Up".to_string()
     }
 
-    fn cost(&self) -> usize { 1000 }
+    fn cost(&self) -> usize { 125 }
 
     fn description(&self, player: &mut Player) -> String {
-        format!("Grants a one time revive upon taking fatal damage. (Healthbar becomes Gold)")
+        format!("Generate Double Gold on Killing Enemies")
     }
 
     fn apply(&self, player: &mut Player) {
-        player.has_lifeline = true;
+        player.gold_multi = 2.0;
     }
 
     fn is_unique(&self) -> bool { true }
@@ -27,4 +27,4 @@ impl Item for Lifeline {
     fn can_buy(&self, player: &mut Player) -> bool { true }
 }
 
-inventory::submit!(ItemFactory(|| Box::new(Lifeline::default())));
+inventory::submit!(ItemFactory(|| Box::new(PassiveIncome::default())));

@@ -251,6 +251,7 @@ fn spawn_item_card(
                 Text::new(title),
                 TextFont { font: font.clone(), font_size: 24.0, ..default() },
                 text_color,
+                TextLayout::new_with_justify(Justify::Center),
             ));
         } else {
             card.spawn((
@@ -259,6 +260,7 @@ fn spawn_item_card(
                 TextFont { font: font.clone(), font_size: 24.0, ..default() },
                 text_color,
                 CardTitleText(item_name.clone()),
+                TextLayout::new_with_justify(Justify::Center),
             ));
         }
 
@@ -267,6 +269,7 @@ fn spawn_item_card(
             Text::new(item.description(player)),
             TextFont { font: font.clone(), font_size: 14.0, ..default() },
             TextColor(Color::srgba(0.7, 0.7, 0.7, 1.0)),
+            TextLayout::new_with_justify(Justify::Center),
         ));
 
         let cost_color = if disabled {
@@ -280,6 +283,7 @@ fn spawn_item_card(
             Text::new(format!("${}", item.cost())),
             TextFont { font: font.clone(), font_size: 22.0, ..default() },
             TextColor(cost_color),
+            TextLayout::new_with_justify(Justify::Center),
         ));
     });
 }
