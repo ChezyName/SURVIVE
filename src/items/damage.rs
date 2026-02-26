@@ -15,7 +15,7 @@ impl Item for Damage {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases Damage by {}", format(DAMAGE_INCREASE))
     }
 

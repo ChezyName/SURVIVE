@@ -1,5 +1,5 @@
 use super::{Item, ItemFactory};
-use crate::{player::Player};
+use crate::{config, player::Player};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //adds one pellet per
@@ -12,19 +12,10 @@ pub const SIZE_MULTI: f32 = 30.0;                   //Extra size for bulelts in 
 pub const SPAWN_TIME_MS: u64 = 250;                 //Total time to spawn x Projectiles
 pub const TURN_SPEED: [f32;2] = [2.5, 12.0];        //Speed of Turning Angle min-max (more accurate the closer the bullets are)
 pub const MIN_MAX_DIST: [f32; 2] = [150.0, 1000.0]; //Distance min-max in which the bullets are more accurate
+const DAMAGE_REDUCTION: f32 = 25.0;
 
-#[derive(Default)]
-pub struct Switch {
-    level: AtomicUsize,
-}
-
-impl Clone for Switch {
-    fn clone(&self) -> Self {
-        Self {
-            level: AtomicUsize::new(self.level.load(Ordering::Relaxed)),
-        }
-    }
-}
+#[derive(Default, Clone)]
+pub struct Switch;
 
 impl Item for Switch {
     fn name(&self) -> String {
@@ -33,14 +24,14 @@ impl Item for Switch {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
-        format!("Add 1 Extra Projectile to Missle. Auto fires homing missiles when you hit an enemy with a bullet. Reduces pellet count by 1.")
+    fn description(&self, player: &mut Player) -> String {
+        format!("Add 1 Extra Projectile to Missle. Auto fires homing missiles when you hit an enemy with a bullet. Reduces pellet count by 1. Reduces damage by {}; Min={}", config::format(DAMAGE_REDUCTION), config::format(config::BULLET_DAMAGE))
     }
 
     fn apply(&self, player: &mut Player) {
-        self.level.fetch_add(1, Ordering::Relaxed);
         player.missiles += 1;
         player.pellets = (player.pellets - 1).max(1);
+        player.damage = (player.damage - DAMAGE_REDUCTION).max(config::BULLET_DAMAGE)
     }
 
     fn is_unique(&self) -> bool { false }
@@ -50,8 +41,7 @@ impl Item for Switch {
     }
 
     fn can_buy(&self, player: &mut Player) -> bool {
-        let current_lvl = self.level.load(Ordering::Relaxed);
-        return current_lvl < MAX_LEVEL
+        return player.missiles < MAX_LEVEL
     }
 }
 

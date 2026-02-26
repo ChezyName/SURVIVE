@@ -13,7 +13,7 @@ impl Item for Explosion {
 
     fn cost(&self) -> usize { 200 }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases Explosion Radius by {}%", config::format(EXPLOSION_RADIUS * 100.0))
     }
 

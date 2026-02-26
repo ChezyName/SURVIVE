@@ -280,80 +280,85 @@ pub fn update_explosions(
     time: Res<Time>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut game_state: ResMut<GameState>,
-    mut params: ParamSet<(
-        Query<(Entity, &mut Transform, &MeshMaterial2d<ColorMaterial>, &mut ExplosionVfx)>,
-        Query<(Entity, &Transform, &mut Enemy)>,
-    )>,
     mut homing_queue: ResMut<HomingSpawnQueue>,
-    mut player_query: Query<(&mut Player, &Transform)>,
+    mut vfx_query: Query<(Entity, &mut Transform, &MeshMaterial2d<ColorMaterial>, &mut ExplosionVfx)>,
+    mut enemy_query: Query<(Entity, &Transform, &mut Enemy), Without<ExplosionVfx>>,
+    mut player_query: Query<(&mut Player, &Transform), (Without<ExplosionVfx>, Without<Enemy>)>,
 ) {
-    // First pass: update VFX, collect explosion data
-    let mut active_explosions: Vec<(Entity, Vec2, f32, f32)> = Vec::new();
-
-    for (entity, mut transform, material_handle, mut vfx) in &mut params.p0() {
+    // Pass 1: VFX update, collect explosion data
+    let mut active_explosions: Vec<(Entity, Vec2, f32, f32, Vec<Entity>)> = Vec::new();
+    for (entity, mut transform, material_handle, mut vfx) in &mut vfx_query {
         vfx.timer.tick(time.delta());
         let progress = vfx.timer.fraction();
         let radius = vfx.max_radius * progress;
         transform.scale = Vec3::splat(radius);
-
         if let Some(mat) = materials.get_mut(&material_handle.0) {
             mat.color = Color::srgba(1.0, 0.5 - progress * 0.3, 0.1, 0.6 * (1.0 - progress));
         }
-
-        active_explosions.push((entity, transform.translation.truncate(), radius, vfx.damage));
+        active_explosions.push((entity, transform.translation.truncate(), radius, vfx.damage, vfx.damaged_enemies.clone()));
     }
 
-    // Second pass: damage enemies
-    if let Ok((mut player, player_transform)) = player_query.single_mut() {
-        for (vfx_entity, explosion_pos, radius, damage) in &active_explosions {
-            let already_damaged: Vec<Entity> = params.p0()
-                .get(*vfx_entity)
-                .map(|(_, _, _, vfx)| vfx.damaged_enemies.clone())
-                .unwrap_or_default();
+    // Pass 2: collect hits — (vfx_entity, enemy_entity, damage)
+    let mut hits: Vec<(Entity, Entity, f32)> = Vec::new();
+    for (vfx_entity, explosion_pos, radius, damage, already_damaged) in &active_explosions {
+        for (enemy_entity, enemy_transform, _) in enemy_query.iter() {
+            if already_damaged.contains(&enemy_entity) { continue; }
+            let dist = enemy_transform.translation.truncate().distance(*explosion_pos);
+            if dist < *radius {
+                let falloff = 1.0 - (dist / *radius);
+                hits.push((*vfx_entity, enemy_entity, damage * falloff));
+            }
+        }
+    }
 
-            let mut newly_damaged: Vec<Entity> = Vec::new();
+    // Pass 3: collect player info then drop — no borrow held
+    let player_info = player_query.single_mut().ok().map(|(p, t)| {
+        (p.missiles, p.missile_explosion, *t)
+    });
 
-            for (enemy_entity, enemy_transform, mut enemy_comp) in &mut params.p1() {
-                if already_damaged.contains(&enemy_entity) { continue; }
-                let dist = enemy_transform.translation.truncate().distance(*explosion_pos);
-                if dist < *radius {
-                    let falloff = 1.0 - (dist / *radius);
-                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage * falloff);
-                    newly_damaged.push(enemy_entity);
+    // Pass 4: apply damage — safe now, no overlapping borrows
+    let mut newly_damaged: std::collections::HashMap<Entity, Vec<Entity>> = std::collections::HashMap::new();
+    for (vfx_entity, enemy_entity, hit_damage) in hits {
+        if let Ok(mut enemy_comp) = enemy_query.get_mut(enemy_entity).map(|(_, _, e)| e) {
+            if let Ok((mut player, _)) = player_query.single_mut() {
+                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, hit_damage);
+                newly_damaged.entry(vfx_entity).or_default().push(enemy_entity);
 
-                    if player.missiles > 0 && player.missile_explosion {
+                if let Some((missiles, missile_explosion, p_transform)) = player_info {
+                    if missiles > 0 && missile_explosion {
                         let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
-                        let delay_per = if player.missiles <= 1 {
-                            0.0
-                        } else {
-                            total_delay / (player.missiles - 1) as f32
-                        };
-
-                        for i in 0..player.missiles {
+                        let delay_per = if missiles <= 1 { 0.0 } else { total_delay / (missiles - 1) as f32 };
+                        for i in 0..missiles {
                             homing_queue.0.push(HomingSpawnEvent {
-                                player_transform: *player_transform,
+                                player_transform: p_transform,
                                 target_entity: enemy_entity,
-                                base_damage: (damage.max(1.0) / explosion::EXPLOSION_DAMAGE_MULTI) * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                base_damage: (hit_damage.max(1.0) / explosion::EXPLOSION_DAMAGE_MULTI) * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
                                 projectile_index: i,
-                                total_projectiles: player.missiles,
+                                total_projectiles: missiles,
                                 delay: i as f32 * delay_per,
                             });
                         }
                     }
                 }
             }
-
-            if let Ok((_, _, _, mut vfx)) = params.p0().get_mut(*vfx_entity) {
-                vfx.damaged_enemies.extend(newly_damaged);
-            }
         }
     }
 
-    // Despawn finished explosions
-    for (entity, _, _, vfx) in &params.p0() {
-        if vfx.timer.is_finished() {
-            commands.entity(entity).despawn();
+    // Pass 5: write back damaged lists
+    for (vfx_entity, enemies) in newly_damaged {
+        if let Ok((_, _, _, mut vfx)) = vfx_query.get_mut(vfx_entity) {
+            vfx.damaged_enemies.extend(enemies);
         }
+    }
+
+    // Pass 6: despawn finished
+    let finished: Vec<Entity> = vfx_query
+        .iter()
+        .filter(|(_, _, _, vfx)| vfx.timer.is_finished())
+        .map(|(e, _, _, _)| e)
+        .collect();
+    for entity in finished {
+        commands.entity(entity).despawn();
     }
 }
 

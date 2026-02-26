@@ -15,7 +15,7 @@ impl Item for Accuracy {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Reduces Spread by {}°", format(ACCURACY_INCREASE))
     }
 

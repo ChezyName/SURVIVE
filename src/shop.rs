@@ -264,7 +264,7 @@ fn spawn_item_card(
 
         card.spawn((
             Node { align_self: AlignSelf::Center, ..default() },
-            Text::new(item.description()),
+            Text::new(item.description(player)),
             TextFont { font: font.clone(), font_size: 14.0, ..default() },
             TextColor(Color::srgba(0.7, 0.7, 0.7, 1.0)),
         ));

@@ -18,6 +18,7 @@ pub fn update_playtime(
     time: Res<Time<Real>>,
 ) {
     game_state.playtime_secs += time.delta_secs();
+    game_state.money += (1500.0 * time.delta_secs()) as usize;
 }
 
 //turns playtime into d h m s

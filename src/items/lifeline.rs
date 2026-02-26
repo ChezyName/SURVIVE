@@ -12,7 +12,7 @@ impl Item for Lifeline {
 
     fn cost(&self) -> usize { 1000 }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Grants a one time revive upon taking fatal damage. (Healthbar becomes Gold)")
     }
 

@@ -4,7 +4,7 @@ use crate::player::Player;
 pub trait Item: Send + Sync {
     fn name(&self) -> String;
     fn cost(&self) -> usize;
-    fn description(&self) -> String;
+    fn description(&self, player: &mut Player) -> String;
     fn apply(&self, player: &mut Player);
     fn clone_box(&self) -> Box<dyn Item>;
     fn is_unique(&self) -> bool; //if this item can only be obtained once

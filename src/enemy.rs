@@ -45,7 +45,7 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (enemy_ai_system, enemy_collision_system));
+        app.add_systems(Update, (enemy_ai_system, enemy_collision_system).run_if(in_state(AppState::InGame)));
     }
 }
 
@@ -184,7 +184,7 @@ pub fn spawn_enemy(
             ..default()
         },
         Enemy {
-            health: enemy_data.health,
+            health: enemy_data.health * 1000.0,
             speed: enemy_data.speed,
             damage: enemy_data.damage,
             price_tag: enemy_data.reward,

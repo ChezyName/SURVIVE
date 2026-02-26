@@ -15,7 +15,7 @@ impl Item for RapidFire {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases Fire Rate by {} RPM", format(FIRE_RATE_INCREASE))
     }
 

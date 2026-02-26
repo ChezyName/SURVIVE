@@ -16,7 +16,7 @@ impl Item for LifeSteal {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases lifesteal by {}%", format(LIFE_STEAL_PERCENT_INCREASE))
     }
 

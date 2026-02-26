@@ -16,7 +16,7 @@ impl Item for BulletSpeed {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases Bullet Speed by {} m/s", format(BULLET_SPEED_INCREASE))
     }
 

@@ -9,18 +9,8 @@ const FIRE_RATE_DECREASE: f32 = 50.0;
 const COST: usize = 300;
 const MAX_LEVEL: usize = 8;
 
-#[derive(Default)]
-pub struct Shotgun {
-    level: AtomicUsize,
-}
-
-impl Clone for Shotgun {
-    fn clone(&self) -> Self {
-        Self {
-            level: AtomicUsize::new(self.level.load(Ordering::Relaxed)),
-        }
-    }
-}
+#[derive(Default, Clone)]
+pub struct Shotgun;
 
 impl Item for Shotgun {
     fn name(&self) -> String {
@@ -29,13 +19,12 @@ impl Item for Shotgun {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
-        let current_lvl = self.level.load(Ordering::Relaxed);
-        format!("Adds Pellet but reduces Accuracy by {} and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (current_lvl as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))
+    fn description(&self, player: &mut Player) -> String {
+        format!("Adds Pellet but reduces Accuracy by {} and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (player.pellets.max(0) as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))
     }
 
     fn apply(&self, player: &mut Player) {
-        let current_lvl = self.level.fetch_add(1, Ordering::Relaxed);
+        let current_lvl = player.pellets;
         let fire_rate = (player.fire_rate - FIRE_RATE_DECREASE).max(config::PLAYER_MIN_FIRE_RATE);
         player.fire_rate = fire_rate;
         player.fire_timer.set_duration(std::time::Duration::from_secs_f32(60.0/fire_rate));
@@ -53,8 +42,7 @@ impl Item for Shotgun {
     }
 
     fn can_buy(&self, player: &mut Player) -> bool {
-        let current_lvl = self.level.load(Ordering::Relaxed);
-        return current_lvl < MAX_LEVEL
+        return player.pellets < MAX_LEVEL
     }
 }
 

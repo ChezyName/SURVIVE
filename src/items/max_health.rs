@@ -15,7 +15,7 @@ impl Item for MaxHealth {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases Max Health by {}", format(HEALTH_INCREASE))
     }
 

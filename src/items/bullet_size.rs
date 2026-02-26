@@ -17,7 +17,7 @@ impl Item for BulletSize {
 
     fn cost(&self) -> usize { COST }
 
-    fn description(&self) -> String {
+    fn description(&self, player: &mut Player) -> String {
         format!("Increases bullet size by {}% and allows you to pierce {} additional target", format(BULLET_SIZE_PERCENT_INCREASE), BULLET_SIZE_PIERCE)
     }
 
