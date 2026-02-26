@@ -26,24 +26,34 @@ pub fn start_wave(
     // ... other params
 ) {
     game_state.round += 1;
-    let wave = (game_state.round as f32).powf(config::WAVE_EXPO).min(1.0) as usize;
+    let wave = (game_state.round as f32).powf(config::WAVE_EXPO).max(1.0) as usize;
+    let mut enemy_count = wave * config::WAVE_ENEMIES_PER_WAVE;
 
     // 1. Calculate Targets
     let mut targets = HashMap::new();
-    targets.insert(EnemyType::Normal, wave * config::WAVE_ENEMIES_PER_WAVE);
-    
-    if wave % config::WAVE_UNIQUE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Unique, ((wave as f32 / config::WAVE_UNIQUE_ENEMY_WAVE as f32) * 1.5) as usize); 
+
+    if game_state.round % config::WAVE_BOSS_ENEMY_WAVE == 0 {
+        let b_count = (wave / config::WAVE_BOSS_ENEMY_WAVE / 2).max(1).min(enemy_count);
+        targets.insert(EnemyType::Boss, b_count);
+        enemy_count = enemy_count.saturating_sub(b_count);
     }
-    if wave % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Large,wave / config::WAVE_LARGE_ENEMY_WAVE);
+    if game_state.round % config::WAVE_COLOSSAL_ENEMY_WAVE == 0 {
+        let c_count = (wave / config::WAVE_COLOSSAL_ENEMY_WAVE / 2).max(1).min(enemy_count);
+        targets.insert(EnemyType::Colossal, c_count); 
+        enemy_count = enemy_count.saturating_sub(c_count);
     }
-    if wave % config::WAVE_COLOSSAL_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Colossal, (wave / config::WAVE_COLOSSAL_ENEMY_WAVE / 2).min(1)); 
+    if game_state.round % config::WAVE_LARGE_ENEMY_WAVE == 0 { 
+        let l_count = (wave / config::WAVE_LARGE_ENEMY_WAVE).max(1).min(enemy_count);
+        targets.insert(EnemyType::Large, l_count);
+        enemy_count = enemy_count.saturating_sub(l_count);
     }
-    if wave % config::WAVE_BOSS_ENEMY_WAVE == 0 { 
-        targets.insert(EnemyType::Boss, (wave / config::WAVE_BOSS_ENEMY_WAVE / 2).min(1)); 
+    if game_state.round % config::WAVE_UNIQUE_ENEMY_WAVE == 0 {
+        let u_count = (((wave as f32 / config::WAVE_UNIQUE_ENEMY_WAVE as f32) * 1.5).max(1.0) as usize).min(enemy_count);
+        targets.insert(EnemyType::Unique, u_count);
+        enemy_count = enemy_count.saturating_sub(u_count);
     }
+
+    targets.insert(EnemyType::Normal, enemy_count);
 
     let mut queue = Vec::new();
     for (etype, &count) in targets.iter() {

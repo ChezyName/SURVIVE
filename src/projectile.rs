@@ -219,7 +219,7 @@ fn projectile_collision(
                     }
 
                     // Explosion && not homing bullet already
-                    if player.explosive_bullets && !projectile.homing.is_none() {
+                    if player.explosive_bullets && projectile.homing.is_none() {
                         let explosion_pos = projectile_transform.translation.truncate();
                         let explosion_radius = config::EXPLOSION_RADIUS;
                         let explosion_damage = damage / 2.0;
