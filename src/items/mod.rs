@@ -39,3 +39,5 @@ pub mod passive_income;
 pub mod gold_multi;
 pub mod gold_multi_2;
 pub mod gold_multi_3;
+pub mod pure_sniper;
+pub mod pure_hunter;
