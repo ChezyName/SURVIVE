@@ -4,7 +4,6 @@ use crate::config::format;
 
 //adds one pellet per
 const LIFE_STEAL_PERCENT_INCREASE: f32 = 2.5;
-const COST: usize = 25;
 
 #[derive(Clone, Default)]
 pub struct LifeSteal;
@@ -14,7 +13,7 @@ impl Item for LifeSteal {
         "Vamperism".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 25 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases lifesteal by {}%", format(LIFE_STEAL_PERCENT_INCREASE))

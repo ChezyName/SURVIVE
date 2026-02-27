@@ -44,9 +44,7 @@ pub enum EnemyType {
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, (enemy_ai_system, enemy_collision_system).run_if(in_state(AppState::InGame)));
-    }
+    fn build(&self, app: &mut App) { app.add_systems(Update, (enemy_ai_system, enemy_collision_system).run_if(in_state(AppState::InGame))); }
 }
 
 fn enemy_ai_system(

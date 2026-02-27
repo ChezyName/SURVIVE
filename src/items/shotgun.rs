@@ -6,7 +6,6 @@ use crate::config::format;
 //adds one pellet per
 const ACCURACY_INCREASE: [f32;2] = [8.0, 2.5]; //accuracy in deg min - max (based on pellet count)
 const FIRE_RATE_DECREASE: f32 = 50.0;
-const COST: usize = 300;
 const MAX_LEVEL: usize = 8;
 
 #[derive(Default, Clone)]
@@ -17,7 +16,7 @@ impl Item for Shotgun {
         "Shotgun".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 300 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Adds Pellet but reduces Accuracy by {}° and Fire Rate by {} RPM", format(config::lerp(ACCURACY_INCREASE[0], ACCURACY_INCREASE[1], (player.pellets.max(0) as f32/MAX_LEVEL as f32).clamp(0.0, 1.0))), format(FIRE_RATE_DECREASE))

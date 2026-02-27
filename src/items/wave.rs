@@ -18,7 +18,7 @@ fn current_level(player: &Player) -> usize {
 impl Item for Wave {
     fn name(&self) -> String { "Wave".to_string() }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 350 }
 
     fn description(&self, player: &mut Player) -> String {
         let next_level = current_level(player).clamp(0, TIME_PER_LEVEL.len() - 1);

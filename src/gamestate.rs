@@ -14,11 +14,7 @@ pub struct GameState {
     pub playtime_secs: f32,
 }
 
-pub fn update_playtime(
-    mut game_state: ResMut<GameState>,
-    time: Res<Time<Real>>,
-    player_query: Query<&Player>,
-) {
+pub fn update_playtime(mut game_state: ResMut<GameState>, time: Res<Time<Real>>, player_query: Query<&Player>) {
     game_state.playtime_secs += time.delta_secs();
     let Ok(player) = player_query.single() else { return };
     game_state.money += (player.gold_per_second * time.delta_secs()) as usize;
@@ -41,15 +37,9 @@ pub fn fmt_playtime(secs: f32) -> String {
 }
 
 impl GameState {
-    pub fn item_count(&self, name: &str) -> usize {
-        self.item_counts.get(name).copied().unwrap_or(0)
-    }
+    pub fn item_count(&self, name: &str) -> usize { self.item_counts.get(name).copied().unwrap_or(0) }
 
-    pub fn has_item(&self, name: &str) -> bool {
-        self.item_count(name) > 0
-    }
+    pub fn has_item(&self, name: &str) -> bool { self.item_count(name) > 0 }
 
-    pub fn record_purchase(&mut self, name: String) {
-        *self.item_counts.entry(name).or_insert(0) += 1;
-    }
+    pub fn record_purchase(&mut self, name: String) { *self.item_counts.entry(name).or_insert(0) += 1; }
 }

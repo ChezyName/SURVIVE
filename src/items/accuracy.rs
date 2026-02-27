@@ -3,7 +3,6 @@ use crate::player::Player;
 use crate::config::format;
 
 const ACCURACY_INCREASE: f32 = 2.5;
-const COST: usize = 75;
 
 #[derive(Clone, Default)]
 pub struct Accuracy;
@@ -13,7 +12,7 @@ impl Item for Accuracy {
         "Sniper Scope".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 75 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Reduces Spread by {}°", format(ACCURACY_INCREASE))

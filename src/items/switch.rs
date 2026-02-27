@@ -3,7 +3,6 @@ use crate::{config, player::Player};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //adds one pellet per
-const COST: usize = 300;
 const MAX_LEVEL: usize = 8;
 pub const DAMAGE_REDUCTION_PER_BULLET: f32 = 15.0;  //15% damage for all bullets
 pub const SPEED_MULTI: f32 = 175.0;                 //Extra speed for bullets
@@ -22,7 +21,7 @@ impl Item for Switch {
         "Switch".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 300 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Add 1 Extra Projectile to Missle. Auto fires homing missiles when you hit an enemy with a bullet. Reduces pellet count by 1. Reduces damage by {}; Min={}", config::format(DAMAGE_REDUCTION), config::format(config::BULLET_DAMAGE))

@@ -23,10 +23,7 @@ pub struct PlayerStatsPlugin;
 
 impl Plugin for PlayerStatsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::Shop)))),
-        ).add_systems(Update, send_scroll_events).add_observer(on_scroll_handler);
+        app.add_systems(Update, toggle_stats_panel.run_if(in_state(AppState::InGame).or(in_state(AppState::GameOver).or(in_state(AppState::Shop))))).add_systems(Update, send_scroll_events).add_observer(on_scroll_handler);
     }
 }
 
@@ -37,13 +34,8 @@ fn toggle_stats_panel(
     panel_query: Query<Entity, With<StatsPanel>>,
     player_query: Query<&Player>,
     game_state: Res<GameState>,
-    app_state: Res<State<AppState>>,
     mut time: ResMut<Time<Virtual>>,
 ) {
-    if *app_state.get() == AppState::MainMenu {
-        return;
-    }
-
     if keys.just_pressed(KeyCode::Tab) {
         let font: Handle<Font> = asset_server.load("fonts/FiraCode-SemiBold.ttf");
         let Ok(player) = player_query.single() else { return };
@@ -59,12 +51,7 @@ fn toggle_stats_panel(
     }
 }
 
-fn spawn_stats_panel(
-    commands: &mut Commands,
-    font: &Handle<Font>,
-    player: &Player,
-    game_state: &GameState,
-) {
+fn spawn_stats_panel(commands: &mut Commands, font: &Handle<Font>, player: &Player, game_state: &GameState) {
     //Stat only item list
     commands
         .spawn((
@@ -221,9 +208,7 @@ fn spawn_stats_panel(
         });
 }
 
-fn spawn_divider(
-    parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>,
-) {
+fn spawn_divider(parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>) {
     parent.spawn((
         Node {
             width: Val::Percent(100.0),
@@ -235,12 +220,8 @@ fn spawn_divider(
     ));
 }
 
-fn spawn_stat_row(
-    parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>,
-    font: &Handle<Font>,
-    label: &str,
-    value: &str,
-) {
+fn spawn_stat_row(parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>, font: &Handle<Font>,
+    label: &str, value: &str) {
     parent
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -263,12 +244,7 @@ fn spawn_stat_row(
         });
 }
 
-fn spawn_item_row(
-    parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>,
-    font: &Handle<Font>,
-    name: &str,
-    count: &str,
-) {
+fn spawn_item_row(parent: &mut bevy::ecs::relationship::RelatedSpawnerCommands<bevy::ecs::hierarchy::ChildOf>, font: &Handle<Font>, name: &str, count: &str) {
     parent
         .spawn(Node {
             width: Val::Percent(100.0),
@@ -291,11 +267,7 @@ fn spawn_item_row(
         });
 }
 
-pub fn send_scroll_events(
-    mut mouse_wheel_reader: MessageReader<MouseWheel>,
-    hover_map: Res<HoverMap>,
-    mut commands: Commands,
-) {
+pub fn send_scroll_events(mut mouse_wheel_reader: MessageReader<MouseWheel>, hover_map: Res<HoverMap>, mut commands: Commands) {
     for mouse_wheel in mouse_wheel_reader.read() {
         let mut delta = -Vec2::new(mouse_wheel.x, mouse_wheel.y);
 
@@ -311,10 +283,7 @@ pub fn send_scroll_events(
     }
 }
 
-fn on_scroll_handler(
-    mut scroll: On<Scroll>,
-    mut query: Query<(&mut ScrollPosition, &Node, &ComputedNode), With<ScrollArea>>,
-) {
+fn on_scroll_handler(mut scroll: On<Scroll>, mut query: Query<(&mut ScrollPosition, &Node, &ComputedNode), With<ScrollArea>>,) {
     let Ok((mut scroll_position, node, computed)) = query.get_mut(scroll.entity) else {
         return;
     };

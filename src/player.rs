@@ -69,8 +69,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player)
-           .add_systems(Update, (player_aim_system, player_shooting, player_wave_update).run_if(in_state(AppState::InGame)));
+        app.add_systems(Startup, spawn_player).add_systems(Update, (player_aim_system, player_shooting, player_wave_update).run_if(in_state(AppState::InGame)));
     }
 }
 

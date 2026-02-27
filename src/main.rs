@@ -17,7 +17,6 @@ use crate::projectile::HomingSpawnQueue;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
-    MainMenu,
     #[default] //starts in game for now
     InGame,
     Shop,
@@ -28,20 +27,12 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)//Defaults
         .insert_resource(ClearColor(Color::BLACK))
-        .insert_resource(GameState::default())
-        .init_state::<AppState>()
-        .init_resource::<wave_manager::WaveStatus>()
-        .insert_resource(HomingSpawnQueue::default())
+        .insert_resource(GameState::default()).init_state::<AppState>().init_resource::<wave_manager::WaveStatus>().insert_resource(HomingSpawnQueue::default())
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave)
         .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end, gamestate::update_playtime).chain().run_if(in_state(AppState::InGame)))
-        .add_plugins(player::PlayerPlugin)// Player
-        .add_plugins(player_ui::PlayerUIPlugin) //Player UI
-        .add_plugins(player_stats::PlayerStatsPlugin) //Player UI
-        .add_plugins(projectile::ProjectilePlugin)// Projectiles
-        .add_plugins(enemy::EnemyPlugin)// Enemies
-        .add_plugins(wave::WavePlugin)
+        .add_plugins(player::PlayerPlugin).add_plugins(player_ui::PlayerUIPlugin) //Player UI
+        .add_plugins(player_stats::PlayerStatsPlugin).add_plugins(projectile::ProjectilePlugin).add_plugins(enemy::EnemyPlugin).add_plugins(wave::WavePlugin)
         //Shop
-        .add_plugins(shop::ShopPlugin)
-        .run();
+        .add_plugins(shop::ShopPlugin).run();
 }

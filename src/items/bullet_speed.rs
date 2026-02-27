@@ -4,7 +4,6 @@ use crate::config::format;
 
 //adds one pellet per
 const BULLET_SPEED_INCREASE: f32 = 150.0;
-const COST: usize = 100;
 
 #[derive(Clone, Default)]
 pub struct BulletSpeed;
@@ -14,7 +13,7 @@ impl Item for BulletSpeed {
         "Railgun".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 100 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases Bullet Speed by {} m/s", format(BULLET_SPEED_INCREASE))

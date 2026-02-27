@@ -3,7 +3,6 @@ use crate::player::Player;
 use crate::config::format;
 
 const FIRE_RATE_INCREASE: f32 = 25.0;
-const COST: usize = 80;
 
 #[derive(Clone, Default)]
 pub struct RapidFire;
@@ -13,7 +12,7 @@ impl Item for RapidFire {
         "Rapid Fire".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 80 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases Fire Rate by {} RPM", format(FIRE_RATE_INCREASE))

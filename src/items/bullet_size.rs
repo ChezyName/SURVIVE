@@ -5,7 +5,6 @@ use crate::config::format;
 //adds one pellet per
 const BULLET_SIZE_PERCENT_INCREASE: f32 = 15.0;
 const BULLET_SIZE_PIERCE: usize = 1;
-const COST: usize = 100;
 
 #[derive(Clone, Default)]
 pub struct BulletSize;
@@ -15,7 +14,7 @@ impl Item for BulletSize {
         "Caliber".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 100 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases bullet size by {}% and allows you to pierce {} additional target", format(BULLET_SIZE_PERCENT_INCREASE), BULLET_SIZE_PIERCE)

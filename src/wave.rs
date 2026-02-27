@@ -23,9 +23,7 @@ pub struct Wave {
 pub struct WavePlugin;
 
 impl Plugin for WavePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_waves.run_if(in_state(AppState::InGame))).add_systems(OnEnter(AppState::Shop), despawn_waves);
-    }
+    fn build(&self, app: &mut App) { app.add_systems(Update, update_waves.run_if(in_state(AppState::InGame))).add_systems(OnEnter(AppState::Shop), despawn_waves); }
 }
 
 fn despawn_waves(mut commands: Commands, query: Query<Entity, With<Wave>>) {

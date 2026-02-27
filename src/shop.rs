@@ -31,12 +31,7 @@ pub struct ShopPlugin;
 
 impl Plugin for ShopPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::Shop), spawn_shop)
-            .add_systems(
-                Update,
-                (shop_interaction, skip_interaction, reroll_interaction, disabled_card_interaction).run_if(in_state(AppState::Shop)),
-            )
-            .add_systems(OnExit(AppState::Shop), despawn_shop);
+        app.add_systems(OnEnter(AppState::Shop), spawn_shop).add_systems(Update, (shop_interaction, skip_interaction, reroll_interaction, disabled_card_interaction).run_if(in_state(AppState::Shop))).add_systems(OnExit(AppState::Shop), despawn_shop);
     }
 }
 

@@ -3,7 +3,6 @@ use crate::player::Player;
 use crate::config::format;
 
 const DAMAGE_INCREASE: f32 = 10.0;
-const COST: usize = 50;
 
 #[derive(Clone, Default)]
 pub struct Damage;
@@ -13,7 +12,7 @@ impl Item for Damage {
         "Sharpness".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 50 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases Damage by {}", format(DAMAGE_INCREASE))

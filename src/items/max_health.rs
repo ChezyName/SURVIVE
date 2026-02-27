@@ -3,7 +3,6 @@ use crate::player::Player;
 use crate::config::format;
 
 const HEALTH_INCREASE: f32 = 25.0;
-const COST: usize = 100;
 
 #[derive(Clone, Default)]
 pub struct MaxHealth;
@@ -13,7 +12,7 @@ impl Item for MaxHealth {
         "Iron Heart".to_string()
     }
 
-    fn cost(&self) -> usize { COST }
+    fn cost(&self) -> usize { 100 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases Max Health by {}", format(HEALTH_INCREASE))

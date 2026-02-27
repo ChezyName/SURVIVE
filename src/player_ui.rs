@@ -23,8 +23,7 @@ pub struct PlayerUIPlugin;
 
 impl Plugin for PlayerUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_player_ui)
-           .add_systems(Update, update_player_ui);
+        app.add_systems(Startup, spawn_player_ui).add_systems(Update, update_player_ui);
     }
 }
 
