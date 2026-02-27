@@ -1,9 +1,13 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
 use crate::enemy::Enemy;
+use crate::items::switch;
 use crate::player::Player;
+use crate::projectile::{HomingSpawnEvent, HomingSpawnQueue};
 use crate::{enemy, GameState};
 use crate::AppState;
 
@@ -88,6 +92,7 @@ fn update_waves(
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy), Without<Wave>>,
     mut player_query: Query<&mut Player, Without<Wave>>,
     mut game_state: ResMut<GameState>,
+    mut homing_queue: ResMut<HomingSpawnQueue>,
 ) {
     for (wave_entity, wave_transform, mut wave, mut mesh2d) in &mut wave_query {
         wave.current_radius += wave.speed * time.delta_secs();
@@ -113,6 +118,26 @@ fn update_waves(
                 if dist <= wave.current_radius {
                     enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, wave.damage);
                     wave.damaged_enemies.push(enemy_entity);
+
+                    if player.missiles > 0 && player.wave_missile {
+                        let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
+                        let delay_per = if player.missiles <= 1 {
+                            0.0
+                        } else {
+                            total_delay / (player.missiles - 1) as f32
+                        };
+
+                        for i in 0..player.missiles {
+                            homing_queue.0.push(HomingSpawnEvent {
+                                player_transform: *wave_transform,
+                                target_entity: enemy_entity,
+                                base_damage: wave.damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0).clamp(0.0, 1.0),
+                                projectile_index: i,
+                                total_projectiles: player.missiles,
+                                delay: i as f32 * delay_per,
+                            });
+                        }
+                    }
                 }
             }
         }

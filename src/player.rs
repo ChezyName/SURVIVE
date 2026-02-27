@@ -33,6 +33,7 @@ pub struct Player {
     pub gold_multi: f32,
     pub wave_timer: Timer, //pulsating waves that deal damage
     pub wave_time: f32,
+    pub wave_missile: bool,
 }
 
 impl Default for Player {
@@ -59,6 +60,7 @@ impl Default for Player {
             gold_multi: 1.0,
             wave_timer: Timer::from_seconds(1.0, TimerMode::Once),
             wave_time: -1.0,
+            wave_missile: false,
         }
     }
 }
