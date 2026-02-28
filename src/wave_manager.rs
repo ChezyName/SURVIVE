@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::player::Player;
 use crate::{AppState, GameState, config};
 use crate::enemy::{Enemy};
 use crate::enemy::{EnemyType};
@@ -74,7 +75,7 @@ pub fn start_wave(
     wave_status.is_running = true;
     wave_status.spawn_timer = Timer::from_seconds(1.0, TimerMode::Repeating);
 
-    info!("Wave {} started! Randomized queue ready with {} enemies.", wave, total);
+    //info!("Wave {} started! Randomized queue ready with {} enemies.", wave, total);
 }
 
 pub fn spawn_tick_system(
@@ -84,8 +85,9 @@ pub fn spawn_tick_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    app_state: Res<State<AppState>>,
 ) {
-    if !wave_status.is_running { return; }
+    if !wave_status.is_running || *app_state.get() == AppState::GameOver { return; }
     wave_status.spawn_timer.tick(time.delta());
 
     if wave_status.spawn_timer.just_finished() {
@@ -113,8 +115,10 @@ pub fn check_wave_end(
     mut wave_status: ResMut<WaveStatus>,
     enemy_query: Query<&Enemy>,
     mut next_state: ResMut<NextState<AppState>>,
+    app_state: Res<State<AppState>>,
+    player_query: Query<&Player>,
 ) {
-    if !wave_status.is_running { return; }
+    if !wave_status.is_running || *app_state.get() == AppState::GameOver { return; }
     let all_spawned = wave_status.spawn_queue.is_empty();
     let all_dead = enemy_query.is_empty();
 
@@ -124,9 +128,12 @@ pub fn check_wave_end(
     if all_spawned && all_dead {
         wave_status.is_running = false;
         
-        info!("Wave Complete! Total Spawned: {}. All enemies defeated.", wave_status.enemies_total);
+        //info!("Wave Complete! Total Spawned: {}. All enemies defeated.", wave_status.enemies_total);
 
         //Start Shop State
-        next_state.set(AppState::Shop)
+        if let Ok(player) = player_query.single() {
+            if player.health <= 0.0 { next_state.set(AppState::GameOver); }
+            else { next_state.set(AppState::Shop); }
+        }
     }
 }

@@ -274,7 +274,7 @@ pub fn take_damage(
             return;
         }
 
-        info!("Player has died");
+        //info!("Player has died");
         next_state.set(AppState::GameOver);
     }
 }
