@@ -7,9 +7,7 @@ pub const EXPLOSION_DAMAGE_MULTI: f32 = 1.75; //Bullet Damage * This = Final Exp
 pub struct Explosion;
 
 impl Item for Explosion {
-    fn name(&self) -> String {
-        "Explosive Rounds".to_string()
-    }
+    fn name(&self) -> String { "Explosive Rounds".to_string() }
 
     fn cost(&self) -> usize { 750 }
 

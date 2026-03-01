@@ -8,9 +8,7 @@ const FIRE_RATE_INCREASE: f32 = 25.0;
 pub struct RapidFire;
 
 impl Item for RapidFire {
-    fn name(&self) -> String {
-        "Rapid Fire".to_string()
-    }
+    fn name(&self) -> String { "Rapid Fire".to_string() }
 
     fn cost(&self) -> usize { 80 }
 

@@ -38,9 +38,7 @@ impl Item for Wave {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool {
-        current_level(player) < TIME_PER_LEVEL.len()
-    }
+    fn can_buy(&self, player: &mut Player) -> bool { current_level(player) < TIME_PER_LEVEL.len() }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Wave::default())));

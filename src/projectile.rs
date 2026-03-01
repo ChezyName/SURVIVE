@@ -11,26 +11,13 @@ use crate::enemy::Enemy;
 use crate::AppState;
 
 #[derive(Component)]
-pub struct Projectile {
-    pub damage: f32,
-    pub speed: f32,
-    pub hits: usize,
-    pub max_hits: usize,
-    pub half_w: f32,
-    pub half_l: f32,
-    pub homing: Option<Entity>,
-}
+pub struct Projectile {pub damage: f32, pub speed: f32, pub hits: usize, pub max_hits: usize, pub half_w: f32, pub half_l: f32, pub homing: Option<Entity>}
 
 #[derive(Component)]
 pub struct Lifetime(pub Timer);
 
 #[derive(Component)]
-pub struct ExplosionVfx {
-    pub timer: Timer,
-    pub max_radius: f32,
-    pub damage: f32,
-    pub damaged_enemies: Vec<Entity>,
-}
+pub struct ExplosionVfx {pub timer: Timer, pub max_radius: f32, pub damage: f32, pub damaged_enemies: Vec<Entity>}
 
 #[derive(Resource, Default)]
 pub struct HomingSpawnQueue(pub Vec<HomingSpawnEvent>);

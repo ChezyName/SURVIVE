@@ -12,9 +12,7 @@ const MAX_LEVEL: usize = 8;
 pub struct Shotgun;
 
 impl Item for Shotgun {
-    fn name(&self) -> String {
-        "Shotgun".to_string()
-    }
+    fn name(&self) -> String { "Shotgun".to_string() }
 
     fn cost(&self) -> usize { 300 }
 
@@ -38,9 +36,7 @@ impl Item for Shotgun {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool {
-        return player.pellets < MAX_LEVEL
-    }
+    fn can_buy(&self, player: &mut Player) -> bool { player.pellets < MAX_LEVEL }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Shotgun::default())));

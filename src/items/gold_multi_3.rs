@@ -6,9 +6,7 @@ use crate::config::format;
 pub struct QuadUp;
 
 impl Item for QuadUp {
-    fn name(&self) -> String {
-        "4".to_string()
-    }
+    fn name(&self) -> String { "4".to_string() }
 
     fn cost(&self) -> usize { 450 }
 

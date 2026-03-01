@@ -11,11 +11,7 @@ pub trait Item: Send + Sync {
     fn can_buy(&self, player: &mut Player) -> bool; //if this item can be bought as of right now
 }
 
-impl Clone for Box<dyn Item> {
-    fn clone(&self) -> Box<dyn Item> {
-        self.clone_box()
-    }
-}
+impl Clone for Box<dyn Item> { fn clone(&self) -> Box<dyn Item> { self.clone_box() } }
 
 pub struct ItemFactory(pub fn() -> Box<dyn Item>);
 inventory::collect!(ItemFactory);

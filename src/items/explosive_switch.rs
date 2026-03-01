@@ -5,9 +5,7 @@ use crate::{player::Player};
 pub struct Explosion;
 
 impl Item for Explosion {
-    fn name(&self) -> String {
-        "Explosive X Switch".to_string()
-    }
+    fn name(&self) -> String { "Explosive X Switch".to_string() }
 
     fn cost(&self) -> usize { 750 }
 

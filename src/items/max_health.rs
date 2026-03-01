@@ -8,9 +8,7 @@ const HEALTH_INCREASE: f32 = 25.0;
 pub struct MaxHealth;
 
 impl Item for MaxHealth {
-    fn name(&self) -> String {
-        "Iron Heart".to_string()
-    }
+    fn name(&self) -> String { "Iron Heart".to_string() }
 
     fn cost(&self) -> usize { 100 }
 

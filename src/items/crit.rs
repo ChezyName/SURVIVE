@@ -8,9 +8,7 @@ const CRIT_CHANGE_INCREASE: f32 = 10.0;
 pub struct Crit;
 
 impl Item for Crit {
-    fn name(&self) -> String {
-        "Lady Luck".to_string()
-    }
+    fn name(&self) -> String { "Lady Luck".to_string() }
 
     fn cost(&self) -> usize { 50 }
 

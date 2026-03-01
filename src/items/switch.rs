@@ -17,9 +17,7 @@ const DAMAGE_REDUCTION: f32 = 25.0;
 pub struct Switch;
 
 impl Item for Switch {
-    fn name(&self) -> String {
-        "Switch".to_string()
-    }
+    fn name(&self) -> String { "Switch".to_string() }
 
     fn cost(&self) -> usize { 300 }
 
@@ -37,9 +35,7 @@ impl Item for Switch {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool {
-        return player.missiles < MAX_LEVEL
-    }
+    fn can_buy(&self, player: &mut Player) -> bool { player.missiles < MAX_LEVEL }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Switch::default())));

@@ -35,12 +35,7 @@ impl Plugin for ShopPlugin {
     }
 }
 
-pub fn spawn_shop(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    game_state: Res<GameState>,
-    mut player_query: Query<&mut Player>,
-) {
+pub fn spawn_shop(mut commands: Commands, asset_server: Res<AssetServer>, game_state: Res<GameState>,mut player_query: Query<&mut Player>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraCode-SemiBold.ttf");
     let mut rng = rand::rng();
     let mut player = player_query.single_mut().ok();

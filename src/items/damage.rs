@@ -8,9 +8,7 @@ const DAMAGE_INCREASE: f32 = 10.0;
 pub struct Damage;
 
 impl Item for Damage {
-    fn name(&self) -> String {
-        "Sharpness".to_string()
-    }
+    fn name(&self) -> String { "Sharpness".to_string() }
 
     fn cost(&self) -> usize { 50 }
 

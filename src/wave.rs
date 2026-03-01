@@ -12,13 +12,7 @@ use crate::{enemy, GameState};
 use crate::AppState;
 
 #[derive(Component)]
-pub struct Wave {
-    pub damage: f32,
-    pub speed: f32,
-    pub max_radius: f32,
-    pub current_radius: f32,
-    pub damaged_enemies: Vec<Entity>,
-}
+pub struct Wave { pub damage: f32, pub speed: f32, pub max_radius: f32,pub current_radius: f32,pub damaged_enemies: Vec<Entity> }
 
 pub struct WavePlugin;
 

@@ -8,9 +8,7 @@ const GOLD_PER_SECOND: f32 = 3.5;
 pub struct PassiveIncome;
 
 impl Item for PassiveIncome {
-    fn name(&self) -> String {
-        "Pa$$iv3 1nc0m3".to_string()
-    }
+    fn name(&self) -> String { "Pa$$iv3 1nc0m3".to_string() }
 
     fn cost(&self) -> usize { 1000 }
 

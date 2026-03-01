@@ -10,9 +10,7 @@ const BULLET_SIZE_PIERCE: usize = 1;
 pub struct BulletSize;
 
 impl Item for BulletSize {
-    fn name(&self) -> String {
-        "Caliber".to_string()
-    }
+    fn name(&self) -> String { "Caliber".to_string() }
 
     fn cost(&self) -> usize { 100 }
 

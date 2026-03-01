@@ -7,9 +7,7 @@ const EXPLOSION_RADIUS: f32 = 0.1;
 pub struct Explosion;
 
 impl Item for Explosion {
-    fn name(&self) -> String {
-        "Explosive++".to_string()
-    }
+    fn name(&self) -> String { "Explosive++".to_string() }
 
     fn cost(&self) -> usize { 200 }
 
@@ -25,9 +23,7 @@ impl Item for Explosion {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { 
-        player.explosive_bullets && player.explosive_radius <= 1.5
-    }
+    fn can_buy(&self, player: &mut Player) -> bool { player.explosive_bullets && player.explosive_radius <= 1.5 }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Explosion::default())));

@@ -14,10 +14,7 @@ pub struct ScrollArea;
 
 #[derive(EntityEvent, Debug)]
 #[entity_event(propagate, auto_propagate)]
-struct Scroll {
-    entity: Entity,
-    delta: Vec2,
-}
+struct Scroll { entity: Entity, delta: Vec2}
 
 pub struct PlayerStatsPlugin;
 

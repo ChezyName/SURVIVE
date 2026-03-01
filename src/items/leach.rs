@@ -9,9 +9,7 @@ const LIFE_STEAL_PERCENT_INCREASE: f32 = 2.5;
 pub struct LifeSteal;
 
 impl Item for LifeSteal {
-    fn name(&self) -> String {
-        "Vamperism".to_string()
-    }
+    fn name(&self) -> String { "Vamperism".to_string() }
 
     fn cost(&self) -> usize { 25 }
 
@@ -27,9 +25,7 @@ impl Item for LifeSteal {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool {
-        return player.life_steal < 100.0
-    }
+    fn can_buy(&self, player: &mut Player) -> bool { player.life_steal < 100.0 }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(LifeSteal::default())));

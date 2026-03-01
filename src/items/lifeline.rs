@@ -6,9 +6,7 @@ use crate::config::format;
 pub struct Lifeline;
 
 impl Item for Lifeline {
-    fn name(&self) -> String {
-        "Lifeline".to_string()
-    }
+    fn name(&self) -> String { "Lifeline".to_string() }
 
     fn cost(&self) -> usize { 1000 }
 

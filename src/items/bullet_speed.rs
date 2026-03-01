@@ -9,9 +9,7 @@ const BULLET_SPEED_INCREASE: f32 = 150.0;
 pub struct BulletSpeed;
 
 impl Item for BulletSpeed {
-    fn name(&self) -> String {
-        "Railgun".to_string()
-    }
+    fn name(&self) -> String { "Railgun".to_string() }
 
     fn cost(&self) -> usize { 100 }
 

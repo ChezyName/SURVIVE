@@ -10,15 +10,7 @@ use rand::seq::SliceRandom;
 
 
 #[derive(Resource, Default)]
-pub struct WaveStatus {
-    pub is_running: bool,
-    pub enemies_total: usize,
-    pub enemies_remaining: usize,
-    pub spawn_targets: HashMap<EnemyType, usize>,
-    pub spawned_by_type: HashMap<EnemyType, usize>,
-    pub spawn_timer: Timer,
-    pub spawn_queue: Vec<EnemyType>,
-}
+pub struct WaveStatus { pub is_running: bool, pub enemies_total: usize, pub enemies_remaining: usize, pub spawn_targets: HashMap<EnemyType, usize>, pub spawned_by_type: HashMap<EnemyType, usize>, pub spawn_timer: Timer, pub spawn_queue: Vec<EnemyType>}
 
 pub fn start_wave(
     mut commands: Commands,

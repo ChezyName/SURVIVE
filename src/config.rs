@@ -36,27 +36,13 @@ pub const WAVE_COLOSSAL_ENEMY_WAVE: usize = 4; //Spawn Large Enemies Every 5 Wav
 pub const WAVE_BOSS_ENEMY_WAVE: usize = 5; //Spawn Boss Enemy Every 10 Waves
 
 //Enemy Configs
-pub struct EnemyConfig {
-    pub health: f32,
-    pub damage: f32,
-    pub sides: usize,
-    pub size: f32,
-    pub reward: usize,
-    pub speed: f32,
-    pub movement: MovementType,
-    pub health_per_round: f32,
-    pub score_multi: f32,
-}
+pub struct EnemyConfig { pub health: f32, pub damage: f32, pub sides: usize, pub size: f32, pub reward: usize, pub speed: f32, pub movement: MovementType, pub health_per_round: f32, pub score_multi: f32 }
 
-pub fn lerp(start: f32, end: f32, t: f32) -> f32 {
-    start + t * (end - start)
-}
+pub fn lerp(start: f32, end: f32, t: f32) -> f32 { start + t * (end - start) }
 
 pub fn rand_type(allowed_types: &[MovementType]) -> MovementType {
     let mut rng = rand::rng();
-    *allowed_types
-        .choose(&mut rng)
-        .unwrap_or(&MovementType::Line)
+    *allowed_types.choose(&mut rng).unwrap_or(&MovementType::Line)
 }
 
 impl EnemyType {

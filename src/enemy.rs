@@ -10,18 +10,10 @@ use crate::GameState;
 
 #[derive(Component)]
 pub struct Enemy {
-    pub health: f32,
-    pub speed: f32,
-    pub damage: f32,
-    pub price_tag: usize,
-    pub size: f32,
-    pub movement: MovementType,
-    pub is_switch: bool,
-    pub rand_bool: bool,
-    pub switch_timer: Timer,
-    pub switch_time_range: [f32; 2],
-    pub start_dist: f32,
-    pub self_type: EnemyType,
+    pub health: f32, pub speed: f32, pub damage: f32,
+    pub price_tag: usize, pub size: f32, pub movement: MovementType,
+    pub is_switch: bool, pub rand_bool: bool, pub switch_timer: Timer, pub switch_time_range: [f32; 2],
+    pub start_dist: f32, pub self_type: EnemyType,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -47,11 +39,7 @@ impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) { app.add_systems(Update, (enemy_ai_system, enemy_collision_system).run_if(in_state(AppState::InGame))); }
 }
 
-fn enemy_ai_system(
-    time: Res<Time>,
-    player_query: Query<&Transform, With<Player>>,
-    mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>,
-) {
+fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>>, mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>) {
     if let Ok(player_transform) = player_query.single() {
         let seconds = time.elapsed_secs();
 
@@ -108,13 +96,8 @@ fn enemy_ai_system(
     }
 }
 
-fn enemy_collision_system(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut player_query: Query<(Entity, &Transform, &mut Player)>,
-    mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>,
-    mut next_state: ResMut<NextState<AppState>>,
+fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>,
+    mut player_query: Query<(Entity, &Transform, &mut Player)>, mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>, mut next_state: ResMut<NextState<AppState>>,
 ) {
     for (player_entity, player_transform, mut player_comp) in &mut player_query {
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
@@ -128,13 +111,8 @@ fn enemy_collision_system(
     }
 }
 
-pub fn spawn_enemy(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-    angle_degrees: f32, 
-    enemy_type: EnemyType,
-    game_state: &mut GameState,
+pub fn spawn_enemy(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>, materials: &mut ResMut<Assets<ColorMaterial>>,
+    angle_degrees: f32, enemy_type: EnemyType, game_state: &mut GameState,
 ) {
     let enemy_data = enemy_type.get_config();
     let sides = enemy_data.sides.max(3); //polygons are 3 sides min
@@ -202,14 +180,7 @@ pub fn spawn_enemy(
     ));
 }
 
-pub fn take_damage(
-    commands: &mut Commands,
-    game_state: &mut GameState,
-    player: &mut Player,
-    entity: Entity,
-    enemy: &mut Enemy,
-    damage: f32
-) {
+pub fn take_damage(commands: &mut Commands, game_state: &mut GameState, player: &mut Player, entity: Entity, enemy: &mut Enemy, damage: f32) {
     if enemy.health <= 0.0 { return; }
 
     let clamped_damage = damage.min(enemy.health);

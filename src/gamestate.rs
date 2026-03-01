@@ -4,15 +4,7 @@ use crate::enemy::EnemyType;
 use crate::player::Player;
 
 #[derive(Resource, Default)]
-pub struct GameState {
-    pub round: usize,
-    pub money: usize,
-    pub item_counts: HashMap<String, usize>,
-    pub rerolls: usize,
-    pub total_enemies_killed: usize,
-    pub enemies_killed: HashMap<EnemyType, usize>,
-    pub playtime_secs: f32,
-}
+pub struct GameState { pub round: usize, pub money: usize, pub item_counts: HashMap<String, usize>, pub rerolls: usize, pub total_enemies_killed: usize, pub enemies_killed: HashMap<EnemyType, usize>, pub playtime_secs: f32}
 
 pub fn update_playtime(mut game_state: ResMut<GameState>, time: Res<Time<Real>>, player_query: Query<&Player>) {
     game_state.playtime_secs += time.delta_secs();
@@ -38,8 +30,6 @@ pub fn fmt_playtime(secs: f32) -> String {
 
 impl GameState {
     pub fn item_count(&self, name: &str) -> usize { self.item_counts.get(name).copied().unwrap_or(0) }
-
     pub fn has_item(&self, name: &str) -> bool { self.item_count(name) > 0 }
-
     pub fn record_purchase(&mut self, name: String) { *self.item_counts.entry(name).or_insert(0) += 1; }
 }

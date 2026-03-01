@@ -6,9 +6,7 @@ use crate::config::format;
 pub struct DoubleUp;
 
 impl Item for DoubleUp {
-    fn name(&self) -> String {
-        "Double-Up".to_string()
-    }
+    fn name(&self) -> String { "Double-Up".to_string() }
 
     fn cost(&self) -> usize { 250 }
 

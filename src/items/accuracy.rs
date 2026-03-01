@@ -8,9 +8,7 @@ const ACCURACY_INCREASE: f32 = 2.5;
 pub struct Accuracy;
 
 impl Item for Accuracy {
-    fn name(&self) -> String {
-        "Sniper Scope".to_string()
-    }
+    fn name(&self) -> String { "Sniper Scope".to_string() }
 
     fn cost(&self) -> usize { 75 }
 
