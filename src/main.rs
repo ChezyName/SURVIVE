@@ -10,6 +10,8 @@ mod shop;
 mod player_stats;
 mod wave;
 mod game_over;
+mod menu_base;
+mod main_menu;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
@@ -18,7 +20,8 @@ use crate::projectile::HomingSpawnQueue;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
-    #[default] //starts in game for now
+    #[default] //starts in main menu
+    MainMenu,
     InGame,
     Shop,
     GameOver,
@@ -35,5 +38,5 @@ fn main() {
         .add_plugins(player::PlayerPlugin).add_plugins(player_ui::PlayerUIPlugin) //Player UI
         .add_plugins(player_stats::PlayerStatsPlugin).add_plugins(projectile::ProjectilePlugin).add_plugins(enemy::EnemyPlugin).add_plugins(wave::WavePlugin)
         //Shop
-        .add_plugins(shop::ShopPlugin).add_plugins(game_over::GameOverPlugin).run();
+        .add_plugins(shop::ShopPlugin).add_plugins(game_over::GameOverPlugin).add_plugins(main_menu::MainMenuPlugin).run();
 }

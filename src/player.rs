@@ -12,28 +12,14 @@ use crate::wave;
 //Not a good way to hold items or stats, should be module but...
 #[derive(Component)]
 pub struct Player {
-    pub fire_timer: Timer,
-    pub fire_rate: f32,
-    pub damage: f32,
-    pub bullet_speed: f32,
-    pub pellets: usize,
-    pub bullet_spread: f32,
-    pub health: f32,
-    pub max_health: f32,
-    pub life_steal: f32,
-    pub bullet_size: f32,
-    pub bullet_pierce: usize,
-    pub crit_percent: f32,
-    pub has_lifeline: bool,
-    pub explosive_bullets: bool,
-    pub explosive_radius: f32,
-    pub missiles: usize,
-    pub missile_explosion: bool,
-    pub gold_per_second: f32,
-    pub gold_multi: f32,
+    pub fire_timer: Timer, pub fire_rate: f32,
+    pub damage: f32, pub bullet_speed: f32, pub pellets: usize,  pub bullet_spread: f32,
+    pub health: f32, pub max_health: f32, pub life_steal: f32,
+    pub bullet_size: f32, pub bullet_pierce: usize, pub crit_percent: f32,
+    pub has_lifeline: bool, pub explosive_bullets: bool, pub explosive_radius: f32,
+    pub missiles: usize, pub missile_explosion: bool, pub gold_per_second: f32, pub gold_multi: f32,
     pub wave_timer: Timer, //pulsating waves that deal damage
-    pub wave_time: f32,
-    pub wave_missile: bool,
+    pub wave_time: f32, pub wave_missile: bool,
 }
 
 impl Default for Player {
