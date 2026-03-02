@@ -4,15 +4,25 @@ use crate::projectile::{ExplosionVfx, Projectile};
 use crate::wave::Wave;
 use crate::player::Player;
 use crate::{AppState, GameState};
-use crate::menu_base::{spawn_menu, despawn_menu, any_key_continue};
+use crate::menu_base::{spawn_menu};
 
 pub struct GameOverPlugin;
 
 impl Plugin for GameOverPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::GameOver), spawn_game_over)
-           .add_systems(Update, any_key_continue(AppState::InGame).run_if(in_state(AppState::GameOver)))
+           .add_systems(Update, continue_except_tab.run_if(in_state(AppState::GameOver)))
            .add_systems(OnExit(AppState::GameOver), despawn_game_over);
+    }
+}
+
+//allow player stats window to be opened
+fn continue_except_tab(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut next: ResMut<NextState<AppState>>,
+) {
+    if keys.get_just_pressed().any(|k| *k != KeyCode::Tab) {
+        next.set(AppState::InGame);
     }
 }
 

@@ -51,9 +51,7 @@ pub fn spawn_menu(
 }
 
 pub fn despawn_menu(mut commands: Commands, query: Query<Entity, With<MenuScreen>>) {
-    for entity in &query {
-        commands.entity(entity).despawn();
-    }
+    for entity in &query { commands.entity(entity).despawn(); }
 }
 
 pub fn any_key_continue<S: States + FreelyMutableState>(next: S) -> impl Fn(
@@ -64,8 +62,6 @@ pub fn any_key_continue<S: States + FreelyMutableState>(next: S) -> impl Fn(
     move |keys, mouse, mut next_state| {
         let pressed = keys.get_just_pressed().next().is_some()
             || mouse.get_just_pressed().next().is_some();
-        if pressed {
-            *next_state = NextState::Pending(next.clone());
-        }
+        if pressed { *next_state = NextState::Pending(next.clone()); }
     }
 }

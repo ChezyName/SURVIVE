@@ -1,3 +1,4 @@
+//TODO: Add Wave Dist Card
 use std::time::Duration;
 
 use bevy::prelude::*;
@@ -98,7 +99,6 @@ fn update_waves(
         // Fade out as it reaches max
         let progress = (wave.current_radius / wave.max_radius).clamp(0.0, 1.0);
         let alpha = 0.7 * (1.0 - progress);
-        // Note: to update color you'd need a separate material query, skip for simplicity
 
         // Check enemies inside the ring
         let wave_pos = wave_transform.translation.truncate();

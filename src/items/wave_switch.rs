@@ -13,9 +13,7 @@ impl Item for Explosion {
         format!("Allows Missiles to target enemies hit by Waves.")
     }
 
-    fn apply(&self, player: &mut Player) {
-        player.missile_explosion = true;
-    }
+    fn apply(&self, player: &mut Player) { player.wave_missile = true; }
 
     fn is_unique(&self) -> bool { true }
 

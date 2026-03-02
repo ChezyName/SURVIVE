@@ -126,7 +126,7 @@ fn spawn_stats_panel(commands: &mut Commands, font: &Handle<Font>, player: &Play
                     ("Life Steal",              format!("{}%", format(player.life_steal))),
                     ("Critical Strike Chance",  format!("{}%", format(player.crit_percent))),
                     ("Missiles",                format!("{}", player.missiles)),
-                    ("Wave",                    if player.wave_time != -1.0 { format!("Spawns Every {}s", player.missiles) } else { "NO WAVE ACTIVE".to_string() }),
+                    ("Wave",                    if player.wave_time != -1.0 { format!("Spawns Every {}s", player.wave_time) } else { "NO WAVE ACTIVE".to_string() }),
  		            ("Lifeline", 		        if player.has_lifeline { "ACTIVE" } else { "DISABLED" }.to_string()),
                 ];
 
