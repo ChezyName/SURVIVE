@@ -12,6 +12,7 @@ mod wave;
 mod game_over;
 mod menu_base;
 mod main_menu;
+mod audio;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
@@ -29,8 +30,7 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)//Defaults
-        .insert_resource(ClearColor(Color::BLACK))
+        .add_plugins(DefaultPlugins).insert_resource(ClearColor(Color::BLACK)).init_resource::<audio::GlobalSounds>()
         .insert_resource(GameState::default()).init_state::<AppState>().init_resource::<wave_manager::WaveStatus>().insert_resource(HomingSpawnQueue::default())
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave)

@@ -22,7 +22,7 @@ pub const BULLET_DAMAGE: f32 = 25.0;
 pub const EXPLOSION_RADIUS: f32 = 80.0;
 
 //Basic Enemy Stuff, Multiplies Later
-pub const WAVE_EXPO: f32 = 1.6;                         // Wave Num ^ this = True Wave Number
+pub const WAVE_EXPO: f32 = 1.3;                         // Wave Num ^ this = True Wave Number
 pub const ENEMY_SPAWN_DIST: [f32;2] = [500.0, 2500.0]; //range in m
 pub const ENEMY_SWITCH_TIME_RANGE: [f32; 2] = [150.0, 1500.0]; //time range in ms
 
