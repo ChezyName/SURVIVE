@@ -6,7 +6,7 @@ use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
 use crate::items::{explosion, switch};
 use crate::player::Player;
-use crate::{config, enemy, GameState};
+use crate::{GameState, audio, config, enemy};
 use crate::enemy::Enemy;
 use crate::AppState;
 
@@ -159,6 +159,7 @@ fn projectile_collision(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut homing_queue: ResMut<HomingSpawnQueue>,
+    sounds: Res<audio::GlobalSounds>
 ) {
     if let Ok((mut player, player_transform)) = player_query.single_mut() {
         for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
@@ -192,6 +193,7 @@ fn projectile_collision(
                         };
 
                         for i in 0..player.missiles {
+                            audio::play_sfx_rand_pitch(&mut commands, sounds.missile.clone());
                             homing_queue.0.push(HomingSpawnEvent {
                                 player_transform: *player_transform,
                                 target_entity: enemy_entity,
@@ -239,6 +241,8 @@ fn projectile_collision(
                                 }
                             }
                         }
+
+                        audio::play_sfx_rand_pitch(&mut commands, sounds.explosion.clone());
 
                         commands.spawn((
                             Mesh2d(meshes.add(Circle::new(1.0))),

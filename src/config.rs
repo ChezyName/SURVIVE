@@ -10,6 +10,7 @@ pub const PLAYER_MAX_HEALTH: f32 = 100.0;
 pub const PLAYER_FIRE_RATE: f32 = 240.0; // 60 / rate where rate = RPM (rounds per min)
 pub const PLAYER_HIT_BOX: f32 = 20.0;
 pub const PLAYER_MIN_FIRE_RATE: f32 = 60.0; // 60 / rate where rate = RPM (rounds per min)
+pub const PLAYER_SHOOT_SOUND_TIME: f32 = 60.0/860.0; //Rate for M4 @ 860 RPM
 
 //UI Defaults
 pub const UI_HEALTH_DIV: f32 = 10.0; //How much health per segment

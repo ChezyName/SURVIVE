@@ -5,6 +5,7 @@ use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::Indices;
 use crate::AppState;
+use crate::audio;
 use crate::projectile;
 use crate::config;
 use crate::wave;
@@ -19,34 +20,21 @@ pub struct Player {
     pub has_lifeline: bool, pub explosive_bullets: bool, pub explosive_radius: f32,
     pub missiles: usize, pub missile_explosion: bool, pub gold_per_second: f32, pub gold_multi: f32,
     pub wave_timer: Timer, //pulsating waves that deal damage
-    pub wave_time: f32, pub wave_missile: bool,
+    pub wave_time: f32, pub wave_missile: bool, pub shoot_sound_timer: f32,
 }
 
 impl Default for Player {
     fn default() -> Self {
         Self {
-            fire_timer: Timer::from_seconds(60.0/config::PLAYER_FIRE_RATE, TimerMode::Once),
-            fire_rate: config::PLAYER_FIRE_RATE,
-            damage: config::BULLET_DAMAGE,
-            bullet_speed: config::BULLET_SPEED,
-            pellets: 1,
-            bullet_spread: 0.0,
-            health: config::PLAYER_MAX_HEALTH,
-            max_health: config::PLAYER_MAX_HEALTH,
-            life_steal: 0.0,
-            bullet_size: 100.0,
-            bullet_pierce: 1, //can only hit one target before death
-            crit_percent: 0.0, //crit in % (0 - 100)%
-            has_lifeline: false,
-            explosive_bullets: false,
-            explosive_radius: 1.0,
-            missiles: 0,
-            missile_explosion: false,
-            gold_per_second: 0.0,
-            gold_multi: 1.0,
+            fire_timer: Timer::from_seconds(60.0/(config::PLAYER_FIRE_RATE), TimerMode::Once),
+            fire_rate: config::PLAYER_FIRE_RATE, damage: config::BULLET_DAMAGE, bullet_speed: config::BULLET_SPEED,
+            pellets: 1, bullet_spread: 0.0, health: config::PLAYER_MAX_HEALTH, max_health: config::PLAYER_MAX_HEALTH,
+            life_steal: 0.0, bullet_size: 100.0, bullet_pierce: 1, //can only hit one target before death
+            crit_percent: 0.0, has_lifeline: false, explosive_bullets: false,
+            explosive_radius: 1.0, missiles: 0, missile_explosion: false,
+            gold_per_second: 0.0, gold_multi: 1.0,
             wave_timer: Timer::from_seconds(1.0, TimerMode::Once),
-            wave_time: -1.0,
-            wave_missile: false,
+            wave_time: -1.0, wave_missile: false, shoot_sound_timer: 0.0,
         }
     }
 }
@@ -192,9 +180,11 @@ fn player_shooting(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut player_query: Query<(&Transform, &mut Player)>,
+    sounds: Res<audio::GlobalSounds>,
 ) {
     if let Ok((transform, mut player)) = player_query.single_mut() {
         player.fire_timer.tick(time.delta());
+        player.shoot_sound_timer -= time.delta_secs();
 
         if mouse_input.pressed(MouseButton::Left) && player.fire_timer.is_finished() {
             player.fire_timer.reset();
@@ -217,6 +207,11 @@ fn player_shooting(
                 if spread > 0.0 {
                     b_transform.rotate_z(angle.to_radians());
                 }
+                
+                if player.shoot_sound_timer <= 0.0 {
+                    audio::play_sfx_rand_pitch(&mut commands, sounds.fire.clone());
+                    player.shoot_sound_timer = config::PLAYER_SHOOT_SOUND_TIME;
+                }
 
                 projectile::spawn_projectile(
                     &mut commands,
@@ -235,17 +230,20 @@ pub fn take_damage(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
-    entity: Entity,
     player: &mut Player, // self
     damage: f32,
     next_state: &mut ResMut<NextState<AppState>>,
+    sounds: &Res<audio::GlobalSounds>,
 ) {
     player.health -= damage;
+    audio::play_sfx_rand_pitch(commands, sounds.hurt.clone());
 
     if player.health <= 0.0 {
         if player.has_lifeline {
             player.has_lifeline = false;
             player.health = player.max_health;
+
+            audio::play_sfx_rand_pitch(commands, sounds.lifeline.clone());
 
             wave::spawn_wave(
                 commands,

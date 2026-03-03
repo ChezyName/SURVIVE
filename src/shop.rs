@@ -6,6 +6,7 @@ use rand::seq::IteratorRandom;
 use crate::items::{Item, ItemFactory};
 use crate::player::Player;
 use crate::{AppState, GameState, config};
+use crate::audio;
 
 #[derive(Component)]
 pub struct ShopMenu;
@@ -35,10 +36,12 @@ impl Plugin for ShopPlugin {
     }
 }
 
-pub fn spawn_shop(mut commands: Commands, asset_server: Res<AssetServer>, game_state: Res<GameState>,mut player_query: Query<&mut Player>) {
+pub fn spawn_shop(mut commands: Commands, asset_server: Res<AssetServer>, game_state: Res<GameState>,mut player_query: Query<&mut Player>, sounds: Res<audio::GlobalSounds>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraCode-SemiBold.ttf");
     let mut rng = rand::rng();
     let mut player = player_query.single_mut().ok();
+
+    audio::play_sfx_rand_pitch(&mut commands, sounds.shop_open.clone());
 
     let available: Vec<fn() -> Box<dyn Item>> = inventory::iter::<ItemFactory>()
         .map(|f| f.0)
@@ -289,6 +292,7 @@ pub fn shop_interaction(
     mut money_query: Query<&mut Text, With<MoneyText>>,
     mut title_query: Query<(&CardTitleText, &mut Text), Without<MoneyText>>,
     all_cards: Query<(Entity, &PurchaseButton), (With<Button>, Without<SkipButton>)>,
+    sounds: Res<audio::GlobalSounds>
 ) {
     for (interaction, button_data, mut bg_color) in &mut interaction_query {
         match *interaction {
@@ -299,6 +303,7 @@ pub fn shop_interaction(
                         game_state.money -= item.cost();
                         item.apply(&mut player);
                         game_state.record_purchase(item.name());
+                        audio::play_sfx_rand_pitch(&mut commands, sounds.shop_buy.clone());
 
                         let item_name = item.name();
                         let new_count = game_state.item_count(item_name.as_str());

@@ -30,3 +30,7 @@ impl FromWorld for GlobalSounds {
 }
 
 pub fn play_sfx(commands: &mut Commands, source: Handle<AudioSource>) { commands.spawn(AudioPlayer::new(source)); }
+pub fn play_sfx_rand_pitch(commands: &mut Commands, source: Handle<AudioSource>) {
+    let speed: f32 = rand::random_range(0.9..1.1);
+    commands.spawn((AudioPlayer::new(source), PlaybackSettings { speed, ..PlaybackSettings::ONCE},));
+}

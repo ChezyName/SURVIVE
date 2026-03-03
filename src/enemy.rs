@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use crate::AppState;
+use crate::audio::GlobalSounds;
 use crate::player::Player;
 use bevy::mesh::Indices;
 use crate::config;
@@ -96,16 +97,16 @@ fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>
     }
 }
 
-fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>,
+fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>, sounds: Res<GlobalSounds>,
     mut player_query: Query<(Entity, &Transform, &mut Player)>, mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>, mut next_state: ResMut<NextState<AppState>>,
 ) {
-    for (player_entity, player_transform, mut player_comp) in &mut player_query {
+    for (_player_entity, player_transform, mut player_comp) in &mut player_query {
         for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
             let distance = player_transform.translation.distance(enemy_transform.translation);
 
             if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {
                 commands.entity(enemy_entity).despawn();
-                player::take_damage(&mut commands, &mut meshes, &mut materials, player_entity, &mut player_comp, enemy_comp.damage, &mut next_state);
+                player::take_damage(&mut commands, &mut meshes, &mut materials, &mut player_comp, enemy_comp.damage, &mut next_state, &sounds);
             }
         }
     }
