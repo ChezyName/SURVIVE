@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::asset::RenderAssetUsages;
 use crate::AppState;
-use crate::audio::GlobalSounds;
+use crate::audio;
 use crate::player::Player;
 use bevy::mesh::Indices;
 use crate::config;
@@ -97,7 +97,7 @@ fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>
     }
 }
 
-fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>, sounds: Res<GlobalSounds>,
+fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<ColorMaterial>>, mut sounds: ResMut<audio::GlobalSounds>,
     mut player_query: Query<(Entity, &Transform, &mut Player)>, mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>, mut next_state: ResMut<NextState<AppState>>,
 ) {
     for (_player_entity, player_transform, mut player_comp) in &mut player_query {
@@ -106,7 +106,7 @@ fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh
 
             if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {
                 commands.entity(enemy_entity).despawn();
-                player::take_damage(&mut commands, &mut meshes, &mut materials, &mut player_comp, enemy_comp.damage, &mut next_state, &sounds);
+                player::take_damage(&mut commands, &mut meshes, &mut materials, &mut player_comp, enemy_comp.damage, &mut next_state, &mut sounds);
             }
         }
     }
@@ -181,13 +181,14 @@ pub fn spawn_enemy(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>, m
     ));
 }
 
-pub fn take_damage(commands: &mut Commands, game_state: &mut GameState, player: &mut Player, entity: Entity, enemy: &mut Enemy, damage: f32) {
+pub fn take_damage(commands: &mut Commands, game_state: &mut GameState, player: &mut Player, entity: Entity, enemy: &mut Enemy, damage: f32, sounds: &mut audio::GlobalSounds,) {
     if enemy.health <= 0.0 { return; }
 
     let clamped_damage = damage.min(enemy.health);
     enemy.health -= damage;
 
     if enemy.health <= 0.0 {
+        audio::play_sfx_rand_pitch(commands, &mut sounds.enemy_kill);
         commands.entity(entity).despawn();
         game_state.total_enemies_killed += 1;
         *game_state.enemies_killed.entry(enemy.self_type).or_insert(0) += 1;

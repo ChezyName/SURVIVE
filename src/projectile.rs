@@ -40,12 +40,12 @@ impl Plugin for ProjectilePlugin {
 
 /// The "Factory" function: Call this from the player system.
 pub fn spawn_projectile(
-    commands: &mut Commands,
+    mut commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     player: &mut Player,
     player_transform: Transform,
-    homing: Option<Entity>,
+    homing: Option<Entity>
 ) {
     //bulelt stats from player obj
     let size = (player.bullet_size / 100.0) * 1.0;
@@ -159,7 +159,7 @@ fn projectile_collision(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut homing_queue: ResMut<HomingSpawnQueue>,
-    sounds: Res<audio::GlobalSounds>
+    mut sounds: ResMut<audio::GlobalSounds>
 ) {
     if let Ok((mut player, player_transform)) = player_query.single_mut() {
         for (projectile_entity, projectile_transform, mut projectile) in &mut projectile_query {
@@ -182,7 +182,7 @@ fn projectile_collision(
                         damage += damage * 0.75;
                     }
 
-                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage);
+                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, damage, &mut sounds);
 
                     if player.missiles > 0 && projectile.homing.is_none() {
                         let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
@@ -193,7 +193,6 @@ fn projectile_collision(
                         };
 
                         for i in 0..player.missiles {
-                            audio::play_sfx_rand_pitch(&mut commands, sounds.missile.clone());
                             homing_queue.0.push(HomingSpawnEvent {
                                 player_transform: *player_transform,
                                 target_entity: enemy_entity,
@@ -218,7 +217,7 @@ fn projectile_collision(
                             if dist < explosion_radius {
                                 let falloff = 1.0 - (dist / explosion_radius); // 1.0 at center, 0.0 at edge
                                 let exp_damage = explosion_damage * falloff;
-                                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, other_entity, &mut other_enemy, exp_damage);
+                                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, other_entity, &mut other_enemy, exp_damage, &mut sounds);
 
                                 if player.missiles > 0 && projectile.homing.is_none() && player.missile_explosion {
                                     let total_delay = Duration::from_millis(switch::SPAWN_TIME_MS).as_secs_f32();
@@ -242,7 +241,7 @@ fn projectile_collision(
                             }
                         }
 
-                        audio::play_sfx_rand_pitch(&mut commands, sounds.explosion.clone());
+                        audio::play_sfx_rand_pitch(&mut commands, &mut sounds.as_mut().explosion);
 
                         commands.spawn((
                             Mesh2d(meshes.add(Circle::new(1.0))),
@@ -273,8 +272,8 @@ pub fn update_explosions(
     mut vfx_query: Query<(Entity, &mut Transform, &MeshMaterial2d<ColorMaterial>, &mut ExplosionVfx)>,
     mut enemy_query: Query<(Entity, &Transform, &mut Enemy), Without<ExplosionVfx>>,
     mut player_query: Query<(&mut Player, &Transform), (Without<ExplosionVfx>, Without<Enemy>)>,
+    mut sounds: ResMut<audio::GlobalSounds>
 ) {
-    // Pass 1: VFX update, collect explosion data
     let mut active_explosions: Vec<(Entity, Vec2, f32, f32, Vec<Entity>)> = Vec::new();
     for (entity, mut transform, material_handle, mut vfx) in &mut vfx_query {
         vfx.timer.tick(time.delta());
@@ -287,7 +286,6 @@ pub fn update_explosions(
         active_explosions.push((entity, transform.translation.truncate(), radius, vfx.damage, vfx.damaged_enemies.clone()));
     }
 
-    // Pass 2: collect hits — (vfx_entity, enemy_entity, damage)
     let mut hits: Vec<(Entity, Entity, f32)> = Vec::new();
     for (vfx_entity, explosion_pos, radius, damage, already_damaged) in &active_explosions {
         for (enemy_entity, enemy_transform, _) in enemy_query.iter() {
@@ -300,17 +298,15 @@ pub fn update_explosions(
         }
     }
 
-    // Pass 3: collect player info then drop — no borrow held
     let player_info = player_query.single_mut().ok().map(|(p, t)| {
         (p.missiles, p.missile_explosion, *t)
     });
 
-    // Pass 4: apply damage — safe now, no overlapping borrows
     let mut newly_damaged: std::collections::HashMap<Entity, Vec<Entity>> = std::collections::HashMap::new();
     for (vfx_entity, enemy_entity, hit_damage) in hits {
         if let Ok(mut enemy_comp) = enemy_query.get_mut(enemy_entity).map(|(_, _, e)| e) {
             if let Ok((mut player, _)) = player_query.single_mut() {
-                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, hit_damage);
+                enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, hit_damage, &mut sounds);
                 newly_damaged.entry(vfx_entity).or_default().push(enemy_entity);
 
                 if let Some((missiles, missile_explosion, p_transform)) = player_info {
@@ -333,14 +329,12 @@ pub fn update_explosions(
         }
     }
 
-    // Pass 5: write back damaged lists
     for (vfx_entity, enemies) in newly_damaged {
         if let Ok((_, _, _, mut vfx)) = vfx_query.get_mut(vfx_entity) {
             vfx.damaged_enemies.extend(enemies);
         }
     }
 
-    // Pass 6: despawn finished
     let finished: Vec<Entity> = vfx_query
         .iter()
         .filter(|(_, _, _, vfx)| vfx.timer.is_finished())
@@ -359,6 +353,7 @@ pub fn spawn_homing_projectiles(
     mut player_query: Query<&mut Player>,
     enemy_query: Query<&Transform, With<Enemy>>,
     time: Res<Time>,
+    mut sounds: ResMut<audio::GlobalSounds>,
 ) {
     if queue.0.is_empty() { return; }
     let Ok(mut player) = player_query.single_mut() else { return };
@@ -411,6 +406,7 @@ pub fn spawn_homing_projectiles(
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
         mesh.insert_indices(Indices::U32(indices));
 
+        audio::play_sfx_rand_pitch(&mut commands, &mut sounds.as_mut().missile);
         commands.spawn((
             Projectile {
                 damage: event.base_damage * (switch::DAMAGE_REDUCTION_PER_BULLET / 100.0),

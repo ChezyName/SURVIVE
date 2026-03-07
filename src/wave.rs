@@ -9,7 +9,7 @@ use crate::enemy::Enemy;
 use crate::items::switch;
 use crate::player::Player;
 use crate::projectile::{HomingSpawnEvent, HomingSpawnQueue};
-use crate::{enemy, GameState};
+use crate::{GameState, audio, enemy};
 use crate::AppState;
 
 #[derive(Component)]
@@ -86,6 +86,7 @@ fn update_waves(
     mut player_query: Query<&mut Player, Without<Wave>>,
     mut game_state: ResMut<GameState>,
     mut homing_queue: ResMut<HomingSpawnQueue>,
+    mut sounds: ResMut<audio::GlobalSounds>,
 ) {
     for (wave_entity, wave_transform, mut wave, mut mesh2d) in &mut wave_query {
         wave.current_radius += wave.speed * time.delta_secs();
@@ -108,7 +109,7 @@ fn update_waves(
 
                 let dist = enemy_transform.translation.truncate().distance(wave_pos);
                 if dist <= wave.current_radius {
-                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, wave.damage);
+                    enemy::take_damage(&mut commands, &mut *game_state, &mut *player, enemy_entity, &mut enemy_comp, wave.damage, &mut sounds);
                     wave.damaged_enemies.push(enemy_entity);
 
                     if player.missiles > 0 && player.wave_missile {

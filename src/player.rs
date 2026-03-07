@@ -180,7 +180,7 @@ fn player_shooting(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut player_query: Query<(&Transform, &mut Player)>,
-    sounds: Res<audio::GlobalSounds>,
+    mut sounds: ResMut<audio::GlobalSounds>,
 ) {
     if let Ok((transform, mut player)) = player_query.single_mut() {
         player.fire_timer.tick(time.delta());
@@ -209,7 +209,7 @@ fn player_shooting(
                 }
                 
                 if player.shoot_sound_timer <= 0.0 {
-                    audio::play_sfx_rand_pitch(&mut commands, sounds.fire.clone());
+                    audio::play_sfx_rand_pitch(&mut commands, &mut sounds.as_mut().fire);
                     player.shoot_sound_timer = config::PLAYER_SHOOT_SOUND_TIME;
                 }
 
@@ -233,17 +233,17 @@ pub fn take_damage(
     player: &mut Player, // self
     damage: f32,
     next_state: &mut ResMut<NextState<AppState>>,
-    sounds: &Res<audio::GlobalSounds>,
+    sounds: &mut audio::GlobalSounds,
 ) {
     player.health -= damage;
-    audio::play_sfx_rand_pitch(commands, sounds.hurt.clone());
+    audio::play_sfx_rand_pitch(commands, &mut sounds.hurt);
 
     if player.health <= 0.0 {
         if player.has_lifeline {
             player.has_lifeline = false;
             player.health = player.max_health;
 
-            audio::play_sfx_rand_pitch(commands, sounds.lifeline.clone());
+            audio::play_sfx_rand_pitch(commands, &mut sounds.lifeline);
 
             wave::spawn_wave(
                 commands,
