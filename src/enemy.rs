@@ -8,6 +8,7 @@ use bevy::mesh::Indices;
 use crate::config;
 use crate::player;
 use crate::GameState;
+use crate::wave_manager::WaveStatus;
 
 #[derive(Component)]
 pub struct Enemy {
@@ -40,7 +41,7 @@ impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) { app.add_systems(Update, (enemy_ai_system, enemy_collision_system).run_if(in_state(AppState::InGame))); }
 }
 
-fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>>, mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>) {
+fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>>, mut enemy_query: Query<(&mut Transform, &mut Enemy), Without<Player>>, wave_status: ResMut<WaveStatus>,) {
     if let Ok(player_transform) = player_query.single() {
         let seconds = time.elapsed_secs();
 
@@ -87,7 +88,8 @@ fn enemy_ai_system(time: Res<Time>, player_query: Query<&Transform, With<Player>
                 MovementType::Switch => { to_player } //default to line if zig-zag
             };
 
-            enemy_transform.translation += move_dir * enemy_stats.speed * time.delta_secs();
+            //Enemy movement speed adds when more enemies are killed
+            enemy_transform.translation += move_dir * (enemy_stats.speed * (((wave_status.enemies_total - wave_status.enemies_remaining) as f32/wave_status.enemies_total as f32).clamp(0.5, 1.0) + 0.5)) * time.delta_secs();
 
             if move_dir != Vec3::ZERO {
                 let angle = move_dir.y.atan2(move_dir.x);
@@ -193,9 +195,9 @@ pub fn take_damage(commands: &mut Commands, game_state: &mut GameState, player: 
         game_state.total_enemies_killed += 1;
         *game_state.enemies_killed.entry(enemy.self_type).or_insert(0) += 1;
         game_state.money += (enemy.price_tag as f32 * player.gold_multi) as usize;
-        if player.life_steal > 0.0 {
-            player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)
-        }
-        
+    }
+
+    if player.life_steal > 0.0 {
+        player.health = (player.health + ((player.life_steal / 100.0) * clamped_damage)).clamp(0.0, player.max_health)
     }
 }

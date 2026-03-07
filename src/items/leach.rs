@@ -11,7 +11,7 @@ pub struct LifeSteal;
 impl Item for LifeSteal {
     fn name(&self) -> String { "Vamperism".to_string() }
 
-    fn cost(&self) -> usize { 25 }
+    fn cost(&self) -> usize { 50 }
 
     fn description(&self, player: &mut Player) -> String {
         format!("Increases lifesteal by {}%", format(LIFE_STEAL_PERCENT_INCREASE))
