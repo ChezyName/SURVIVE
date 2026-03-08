@@ -13,7 +13,7 @@ impl Plugin for MainMenuPlugin {
 }
 
 fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraCode-SemiBold.ttf");
+    let font = asset_server.load("embedded://fonts/FiraCode-SemiBold.ttf");
     spawn_menu(
         &mut commands,
         font,

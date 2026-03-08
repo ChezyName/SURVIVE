@@ -34,7 +34,7 @@ fn toggle_stats_panel(
     mut time: ResMut<Time<Virtual>>,
 ) {
     if keys.just_pressed(KeyCode::Tab) {
-        let font: Handle<Font> = asset_server.load("fonts/FiraCode-SemiBold.ttf");
+        let font: Handle<Font> = asset_server.load("embedded://fonts/FiraCode-SemiBold.ttf");
         let Ok(player) = player_query.single() else { return };
         time.pause();
         spawn_stats_panel(&mut commands, &font, player, &game_state);

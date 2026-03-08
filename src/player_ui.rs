@@ -28,7 +28,7 @@ impl Plugin for PlayerUIPlugin {
 }
 
 fn spawn_player_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraCode-SemiBold.ttf");
+    let font = asset_server.load("embedded://fonts/FiraCode-SemiBold.ttf");
 
     commands.spawn(Node {
         width: Val::Percent(100.0),

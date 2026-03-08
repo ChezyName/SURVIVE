@@ -4,21 +4,7 @@ use crate::AppState;
 #[derive(Component)]
 pub struct MusicTrack;
 
-impl FromWorld for MusicPlayer {
-    fn from_world(world: &mut World) -> Self {
-        let asset_server = world.resource::<AssetServer>();
-        Self {
-            tracks: vec![
-                (AppState::MainMenu,    asset_server.load("audio/Main Menu.ogg")),
-                (AppState::InGame,      asset_server.load("audio/Gameplay.ogg")),
-                (AppState::GameOver,    asset_server.load("audio/Game Over.ogg")),
-                (AppState::Shop,        asset_server.load("audio/Shop Theme.ogg")),
-            ],
-        }
-    }
-}
-
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct MusicPlayer {
     pub tracks: Vec<(AppState, Handle<AudioSource>)>,
 }
@@ -36,33 +22,60 @@ impl LimitedSound {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct GlobalSounds {
-    pub fire: LimitedSound,
-    pub hurt: LimitedSound,
-    pub lifeline: LimitedSound,
-    pub missile: LimitedSound,
-    pub explosion: LimitedSound,
-    pub enemy_kill: LimitedSound,
+    pub fire: Option<LimitedSound>,
+    pub hurt: Option<LimitedSound>,
+    pub lifeline: Option<LimitedSound>,
+    pub missile: Option<LimitedSound>,
+    pub explosion: Option<LimitedSound>,
+    pub enemy_kill: Option<LimitedSound>,
 
     //shop
-    pub shop_open: LimitedSound,
-    pub shop_buy: LimitedSound,
+    pub shop_open: Option<LimitedSound>,
+    pub shop_buy: Option<LimitedSound>,
 }
 
-impl FromWorld for GlobalSounds {
-    fn from_world(world: &mut World) -> Self {
-        let asset_server = world.resource::<AssetServer>();
-        Self {
-            fire:       LimitedSound::new(asset_server.load("audio/Fire.ogg"),       15,     "fire"),
-            hurt:       LimitedSound::new(asset_server.load("audio/Hurt.ogg"),       10,     "hurt"),
-            enemy_kill: LimitedSound::new(asset_server.load("audio/EnemyHurt.ogg"),  10,     "enemy_hurt"),
-            lifeline:   LimitedSound::new(asset_server.load("audio/Lifeline.ogg"),   1,      "lifeline"),
-            missile:    LimitedSound::new(asset_server.load("audio/Missile.ogg"),    1,      "missile"),
-            explosion:  LimitedSound::new(asset_server.load("audio/Explosion.ogg"),  15,     "explosion"),
-            shop_open:  LimitedSound::new(asset_server.load("audio/Select.ogg"),     5,      "shop_open"),
-            shop_buy:   LimitedSound::new(asset_server.load("audio/Coins.ogg"),      15,     "shop_buy"),
-        }
+pub fn load_sounds(
+    mut sounds: ResMut<GlobalSounds>,
+    mut music: ResMut<MusicPlayer>,
+    asset_server: Res<AssetServer>,
+
+    mut commands: Commands,
+    music_query: Query<Entity, With<MusicTrack>>,
+    state: Res<State<AppState>>,
+) {
+    sounds.fire       = Some(LimitedSound::new(asset_server.load("embedded://audio/Fire.ogg"),       15, "fire"));
+    sounds.hurt       = Some(LimitedSound::new(asset_server.load("embedded://audio/Hurt.ogg"),       10, "hurt"));
+    sounds.enemy_kill = Some(LimitedSound::new(asset_server.load("embedded://audio/EnemyHurt.ogg"),  10, "enemy_hurt"));
+    sounds.lifeline   = Some(LimitedSound::new(asset_server.load("embedded://audio/Lifeline.ogg"),   1,  "lifeline"));
+    sounds.missile    = Some(LimitedSound::new(asset_server.load("embedded://audio/Missile.ogg"),    1,  "missile"));
+    sounds.explosion  = Some(LimitedSound::new(asset_server.load("embedded://audio/Explosion.ogg"),  15, "explosion"));
+    sounds.shop_open  = Some(LimitedSound::new(asset_server.load("embedded://audio/Select.ogg"),     5,  "shop_open"));
+    sounds.shop_buy   = Some(LimitedSound::new(asset_server.load("embedded://audio/Coins.ogg"),      15, "shop_buy"));
+    music.tracks = vec![
+        (AppState::MainMenu,    asset_server.load("embedded://audio/Main Menu.ogg")),
+        (AppState::InGame,      asset_server.load("embedded://audio/Gameplay.ogg")),
+        (AppState::GameOver,    asset_server.load("embedded://audio/Game Over.ogg")),
+        (AppState::Shop,        asset_server.load("embedded://audio/Shop Theme.ogg")),
+    ];
+
+    //update music on load
+    for entity in &music_query {
+        commands.entity(entity).despawn();
+    }
+
+    let current = state.get();
+    if let Some((_, source)) = music.tracks.iter().find(|(s, _)| s == current) {
+        commands.spawn((
+            AudioPlayer::new(source.clone()),
+            PlaybackSettings {
+                mode: bevy::audio::PlaybackMode::Loop,
+                volume: bevy::audio::Volume::Linear(0.5),
+                ..default()
+            },
+            MusicTrack,
+        ));
     }
 }
 
@@ -70,15 +83,17 @@ impl FromWorld for GlobalSounds {
 #[derive(Component)]
 pub struct SoundMarker(pub &'static str);
 
-pub fn play_sfx_rand_pitch(commands: &mut Commands, sound: &mut LimitedSound) {
-    if sound.active < sound.max {
-        sound.active += 1;
-        let speed: f32 = rand::random_range(0.9..1.1);
-        commands.spawn((
-            AudioPlayer::new(sound.source.clone()),
-            PlaybackSettings { speed, ..PlaybackSettings::ONCE },
-            SoundMarker(sound.id),
-        ));
+pub fn play_sfx_rand_pitch(commands: &mut Commands, audio: &mut Option<LimitedSound>) {
+    if let Some(sound) = audio {
+        if sound.active < sound.max {
+            sound.active += 1;
+            let speed: f32 = rand::random_range(0.9..1.1);
+            commands.spawn((
+                AudioPlayer::new(sound.source.clone()),
+                PlaybackSettings { speed, ..PlaybackSettings::ONCE },
+                SoundMarker(sound.id),
+            ));
+        }
     }
 }
 
@@ -91,12 +106,14 @@ pub fn cleanup(
         if sink.empty() {
             commands.entity(entity).despawn();
             let GlobalSounds { fire, hurt, lifeline, missile, explosion, enemy_kill, shop_open, shop_buy } = sounds.as_mut();
-            let all: [&mut LimitedSound; 8] = [fire, hurt, lifeline, missile, explosion, enemy_kill, shop_open, shop_buy];
+            let all: [&mut Option<LimitedSound>; 8] = [fire, hurt, lifeline, missile, explosion, enemy_kill, shop_open, shop_buy];
 
-            for sound in all {
-                if sound.id == marker.0 {
-                    sound.active = sound.active.saturating_sub(1);
-                    break;
+            for audio in all {
+                if let Some(sound) = audio {
+                    if sound.id == marker.0 {
+                        sound.active = sound.active.saturating_sub(1);
+                        break;
+                    }
                 }
             }
         }

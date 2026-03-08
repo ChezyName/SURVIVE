@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 mod player;
 mod player_ui;
 mod projectile;
@@ -33,7 +34,7 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .add_plugins((EmbeddedAssetPlugin::default(), DefaultPlugins)).insert_resource(ClearColor(Color::BLACK)).init_resource::<audio::GlobalSounds>().add_systems(Update, audio::cleanup).init_resource::<audio::MusicPlayer>()
+        .add_plugins((EmbeddedAssetPlugin::default(), DefaultPlugins)).insert_resource(ClearColor(Color::BLACK)).insert_resource(audio::GlobalSounds::default()).insert_resource(audio::MusicPlayer::default()).add_systems(Startup, audio::load_sounds).add_systems(Update, audio::cleanup)
         .insert_resource(GameState::default()).init_state::<AppState>().init_resource::<wave_manager::WaveStatus>().insert_resource(HomingSpawnQueue::default())
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave).add_systems(OnEnter(AppState::MainMenu), audio::change_music).add_systems(OnEnter(AppState::InGame), audio::change_music)

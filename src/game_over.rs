@@ -41,7 +41,7 @@ pub fn calculate_score(game_state: &GameState) -> f64 {
 }
 
 fn spawn_game_over(mut commands: Commands, asset_server: Res<AssetServer>, game_state: Res<GameState>) {
-    let font = asset_server.load("fonts/FiraCode-SemiBold.ttf");
+    let font = asset_server.load("embedded://fonts/FiraCode-SemiBold.ttf");
     let score_str = format!("Score: {}", player_ui::format_currency(calculate_score(&game_state).floor() as usize));
     let wave_str  = format!("Wave: {}", game_state.round);
     let time_str  = format!("Time Alive: {}", crate::gamestate::fmt_playtime(game_state.playtime_secs));
