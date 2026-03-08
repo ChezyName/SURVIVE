@@ -2,7 +2,6 @@ use bevy::time::{Timer, TimerMode};
 use super::{Item, ItemFactory};
 use crate::{config, player::Player};
 
-const COST: usize = 350;
 const TIME_PER_LEVEL: [f32; 5] = [12.0, 8.5, 5.0, 3.0, 1.5];
 
 #[derive(Default, Clone)]

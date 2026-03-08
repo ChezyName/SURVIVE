@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config::format;
 
 #[derive(Clone, Default)]
 pub struct QuadUp;
@@ -10,7 +9,7 @@ impl Item for QuadUp {
 
     fn cost(&self) -> usize { 450 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Generate FOUR TIMES Gold on Killing Enemies. FANTASTIC")
     }
 

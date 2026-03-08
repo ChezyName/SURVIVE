@@ -52,7 +52,7 @@ fn player_wave_update(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut player_query: Query<(&Transform, &mut Player)>,
-    mut time: ResMut<Time<Virtual>>,
+    time: ResMut<Time<Virtual>>,
 ) {
     if time.is_paused() { return; }
 
@@ -158,7 +158,7 @@ fn player_aim_system(
     window: Single<&Window>,
     camera_query: Single<(&Camera, &GlobalTransform)>,
     mut player_query: Query<&mut Transform, With<Player>>,
-    mut time: ResMut<Time<Virtual>>,
+    time: ResMut<Time<Virtual>>,
 ) {
     if time.is_paused() { return; }
 

@@ -1,9 +1,10 @@
 [package]
 name = "SURVIVE"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.18", features = ["debug"] }
+bevy = { version = "0.18.0"}
 inventory = "0.3.21"
 rand = "0.10.0"
+bevy_embedded_assets = "0.15"

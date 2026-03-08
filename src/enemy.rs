@@ -103,7 +103,7 @@ fn enemy_collision_system(mut commands: Commands, mut meshes: ResMut<Assets<Mesh
     mut player_query: Query<(Entity, &Transform, &mut Player)>, mut enemy_query: Query<(Entity, &Transform, &mut Enemy)>, mut next_state: ResMut<NextState<AppState>>,
 ) {
     for (_player_entity, player_transform, mut player_comp) in &mut player_query {
-        for (enemy_entity, enemy_transform, mut enemy_comp) in &mut enemy_query {
+        for (enemy_entity, enemy_transform, enemy_comp) in &mut enemy_query {
             let distance = player_transform.translation.distance(enemy_transform.translation);
 
             if distance < (config::PLAYER_HIT_BOX + enemy_comp.size) {

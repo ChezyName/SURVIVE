@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config::format;
 
 #[derive(Clone, Default)]
 pub struct Lifeline;
@@ -10,7 +9,7 @@ impl Item for Lifeline {
 
     fn cost(&self) -> usize { 1000 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Grants a one time revive upon taking fatal damage. (Healthbar becomes Gold)")
     }
 
@@ -22,7 +21,7 @@ impl Item for Lifeline {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, _player: &mut Player) -> bool { true }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Lifeline::default())));

@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config::format;
 
 const GOLD_PER_SECOND: f32 = 3.5;
 
@@ -12,7 +11,7 @@ impl Item for PassiveIncome {
 
     fn cost(&self) -> usize { 1000 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Generate an Extra {} Gold per Second", GOLD_PER_SECOND)
     }
 
@@ -24,7 +23,7 @@ impl Item for PassiveIncome {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, _player: &mut Player) -> bool { true }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(PassiveIncome::default())));

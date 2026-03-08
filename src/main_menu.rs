@@ -19,7 +19,7 @@ fn spawn_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         font,
         "PROJECT: SURVIVE",
         Color::srgba(1.0, 1.0, 1.0, 1.0),
-        &[(&"2.5k Total Lines of Code, 20 Items.", 16.0)],
+        &[(&"LMB Shoot | Mouse to Aim", 16.0)],
         "Press any key to start",
     );
 }

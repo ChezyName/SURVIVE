@@ -97,10 +97,6 @@ fn update_waves(
         let outer = wave.current_radius;
         mesh2d.0 = meshes.add(annulus_mesh(inner, outer));
 
-        // Fade out as it reaches max
-        let progress = (wave.current_radius / wave.max_radius).clamp(0.0, 1.0);
-        let alpha = 0.7 * (1.0 - progress);
-
         // Check enemies inside the ring
         let wave_pos = wave_transform.translation.truncate();
         if let Ok(mut player) = player_query.single_mut() {

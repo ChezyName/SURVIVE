@@ -16,8 +16,11 @@ mod audio;
 
 use bevy::prelude::*;
 use bevy::ecs::schedule::ApplyDeferred;
+use bevy_embedded_assets::EmbeddedAssetPlugin;
 use crate::gamestate::GameState;
 use crate::projectile::HomingSpawnQueue;
+
+//TODO: Add Icon - Skipped For Now
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
@@ -30,7 +33,7 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins).insert_resource(ClearColor(Color::BLACK)).init_resource::<audio::GlobalSounds>().add_systems(Update, audio::cleanup).init_resource::<audio::MusicPlayer>()
+        .add_plugins((EmbeddedAssetPlugin::default(), DefaultPlugins)).insert_resource(ClearColor(Color::BLACK)).init_resource::<audio::GlobalSounds>().add_systems(Update, audio::cleanup).init_resource::<audio::MusicPlayer>()
         .insert_resource(GameState::default()).init_state::<AppState>().init_resource::<wave_manager::WaveStatus>().insert_resource(HomingSpawnQueue::default())
         .add_systems(Startup, |mut cmd: Commands| { cmd.spawn(Camera2d); })//Camera
         .add_systems(OnEnter(AppState::InGame), wave_manager::start_wave).add_systems(OnEnter(AppState::MainMenu), audio::change_music).add_systems(OnEnter(AppState::InGame), audio::change_music)
@@ -38,6 +41,6 @@ fn main() {
         .add_systems(Update, (wave_manager::spawn_tick_system, ApplyDeferred, wave_manager::check_wave_end, gamestate::update_playtime).chain().run_if(in_state(AppState::InGame)))
         .add_plugins(player::PlayerPlugin).add_plugins(player_ui::PlayerUIPlugin) //Player UI
         .add_plugins(player_stats::PlayerStatsPlugin).add_plugins(projectile::ProjectilePlugin).add_plugins(enemy::EnemyPlugin).add_plugins(wave::WavePlugin)
-        //Shop
+        //Shop & Icon
         .add_plugins(shop::ShopPlugin).add_plugins(game_over::GameOverPlugin).add_plugins(main_menu::MainMenuPlugin).run();
 }

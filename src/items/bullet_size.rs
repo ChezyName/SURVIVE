@@ -14,7 +14,7 @@ impl Item for BulletSize {
 
     fn cost(&self) -> usize { 100 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Increases bullet size by {}% and allows you to pierce {} additional target", format(BULLET_SIZE_PERCENT_INCREASE), BULLET_SIZE_PIERCE)
     }
 
@@ -28,7 +28,7 @@ impl Item for BulletSize {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, _player: &mut Player) -> bool { true }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(BulletSize::default())));

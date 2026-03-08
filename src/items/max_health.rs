@@ -12,7 +12,7 @@ impl Item for MaxHealth {
 
     fn cost(&self) -> usize { 100 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Increases Max Health by {}", format(HEALTH_INCREASE))
     }
 
@@ -25,7 +25,7 @@ impl Item for MaxHealth {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { return true; }
+    fn can_buy(&self, _player: &mut Player) -> bool { return true; }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(MaxHealth::default())));

@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::{config, player::Player};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::config::format;
 
 //adds one pellet per

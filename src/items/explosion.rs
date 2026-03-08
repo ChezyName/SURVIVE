@@ -1,5 +1,5 @@
 use super::{Item, ItemFactory};
-use crate::{config, player::Player};
+use crate::{player::Player};
 
 pub const EXPLOSION_DAMAGE_MULTI: f32 = 1.75; //Bullet Damage * This = Final Explosion Damage;
 
@@ -11,7 +11,7 @@ impl Item for Explosion {
 
     fn cost(&self) -> usize { 750 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Turns your bullets into explosive rounds.")
     }
 
@@ -23,7 +23,7 @@ impl Item for Explosion {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { true }
+    fn can_buy(&self, _player: &mut Player) -> bool { true }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(Explosion::default())));

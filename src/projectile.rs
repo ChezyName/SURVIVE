@@ -40,7 +40,7 @@ impl Plugin for ProjectilePlugin {
 
 /// The "Factory" function: Call this from the player system.
 pub fn spawn_projectile(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<ColorMaterial>>,
     player: &mut Player,
@@ -356,7 +356,7 @@ pub fn spawn_homing_projectiles(
     mut sounds: ResMut<audio::GlobalSounds>,
 ) {
     if queue.0.is_empty() { return; }
-    let Ok(mut player) = player_query.single_mut() else { return };
+    let Ok(player) = player_query.single_mut() else { return };
 
     // Tick all delays
     for event in queue.0.iter_mut() {

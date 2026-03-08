@@ -1,6 +1,5 @@
 use super::{Item, ItemFactory};
 use crate::player::Player;
-use crate::config::format;
 
 #[derive(Clone, Default)]
 pub struct TripleUp;
@@ -10,7 +9,7 @@ impl Item for TripleUp {
 
     fn cost(&self) -> usize { 350 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Generate Triple Gold on Killing Enemies")
     }
 

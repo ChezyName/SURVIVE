@@ -9,7 +9,7 @@ impl Item for Explosion {
 
     fn cost(&self) -> usize { 500 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Allows Missiles to target enemies hit by Waves.")
     }
 

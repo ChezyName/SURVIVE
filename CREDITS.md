@@ -28,3 +28,7 @@ https://opengameart.org/content/5-chiptunes-action
 ## Font
 Fira Code — SIL Open Font License 1.1 |
 https://github.com/tonsky/FiraCode
+
+## Icon
+Material Icons by Google - Apache 2.0
+https://github.com/google/material-design-icons

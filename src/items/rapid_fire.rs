@@ -12,7 +12,7 @@ impl Item for RapidFire {
 
     fn cost(&self) -> usize { 80 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Increases Fire Rate by {} RPM", format(FIRE_RATE_INCREASE))
     }
 
@@ -28,7 +28,7 @@ impl Item for RapidFire {
 
     fn clone_box(&self) -> Box<dyn Item> { Box::new(self.clone()) }
 
-    fn can_buy(&self, player: &mut Player) -> bool { return true; }
+    fn can_buy(&self, _player: &mut Player) -> bool { return true; }
 }
 
 inventory::submit!(ItemFactory(|| Box::new(RapidFire::default())));

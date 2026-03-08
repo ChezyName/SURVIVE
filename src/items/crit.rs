@@ -12,7 +12,7 @@ impl Item for Crit {
 
     fn cost(&self) -> usize { 50 }
 
-    fn description(&self, player: &mut Player) -> String {
+    fn description(&self, _player: &mut Player) -> String {
         format!("Increases Critical Strike Change by {}%", format(CRIT_CHANGE_INCREASE))
     }
 
