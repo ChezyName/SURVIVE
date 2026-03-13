@@ -13,7 +13,7 @@ https://opengameart.org/content/2-high-quality-explosions
 Terraria by Re-Logic — All rights reserved |
 https://re-logic.com
 
-### REvive Sound Effect
+### Revive Sound Effect
 JoJo's Bizarre Adventure by Hirohiko Araki / David Production — All rights reserved |
 https://davidproduction.jp
 
