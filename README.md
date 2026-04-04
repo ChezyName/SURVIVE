@@ -66,6 +66,4 @@ pub mod ITEM_NAME; //<- add your file here at the end of mod.rs
 ----
 <p align="center">
 © 2026 ChezyName
-| <a href="https://youtube.com/@chezyname/">YouTube</a>
-| <a href="https://twitter.com/@chezyname/">Twitter</a>
 </p>
