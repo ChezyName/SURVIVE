@@ -17,7 +17,7 @@ https://re-logic.com
 JoJo's Bizarre Adventure by Hirohiko Araki / David Production — All rights reserved |
 https://davidproduction.jp
 
-### Main Menu Music
+### Shop Music
 Cleyton Kauffman — CC0 Public Domain |
 https://opengameart.org/content/shop-theme
 
